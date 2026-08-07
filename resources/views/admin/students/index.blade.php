@@ -46,7 +46,7 @@
                     <tr>
                         <th>Foto</th>
                         <th>Matrícula</th>
-                        <th>Nombre Completo</th>
+                        <th>Estudiante</th>
                         <th>Grupo</th>
                         <th>UUID QR (Seudónimo)</th>
                         <th>Tutor(es) Asignado(s)</th>
@@ -68,7 +68,7 @@
                             </td>
                             <td><span class="fw-bold font-monospace text-dark">{{ $student->matricula }}</span></td>
                             <td>
-                                <div class="fw-bold text-dark">{{ $student->nombre_completo }}</div>
+                                <div class="fw-bold text-dark">{{ $student->nombre_formateado }}</div>
                                 <small class="text-muted">Nacimiento: {{ $student->fecha_nacimiento ? $student->fecha_nacimiento->format('d/m/Y') : 'N/A' }}</small>
                             </td>
                             <td>

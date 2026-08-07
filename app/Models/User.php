@@ -63,6 +63,12 @@ class User extends Authenticatable
         return trim("{$this->nombre} {$this->apellido_paterno} {$this->apellido_materno}");
     }
 
+    public function getNombreFormateadoAttribute(): string
+    {
+        $apellidos = trim("{$this->apellido_paterno} {$this->apellido_materno}");
+        return $apellidos ? "{$apellidos}, {$this->nombre}" : $this->nombre;
+    }
+
     public function getNameAttribute($value): string
     {
         return $value ?: $this->nombre_completo;

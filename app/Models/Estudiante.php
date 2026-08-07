@@ -80,6 +80,11 @@ class Estudiante extends Model
         return $this->user ? $this->user->nombre_completo : '';
     }
 
+    public function getNombreFormateadoAttribute(): string
+    {
+        return $this->user ? $this->user->nombre_formateado : '';
+    }
+
     public function getFullNameAttribute(): string
     {
         return $this->nombre_completo;

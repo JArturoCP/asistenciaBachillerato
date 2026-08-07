@@ -16,7 +16,12 @@ class AdminStudentController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Estudiante::with(['user', 'grupo', 'tutores.user']);
+        $query = Estudiante::with(['user', 'grupo', 'tutores.user'])
+            ->join('users', 'estudiantes.user_id', '=', 'users.id')
+            ->orderBy('users.apellido_paterno', 'asc')
+            ->orderBy('users.apellido_materno', 'asc')
+            ->orderBy('users.nombre', 'asc')
+            ->select('estudiantes.*');
 
         if ($request->filled('group_id')) {
             $query->where('grupo_id', $request->group_id);

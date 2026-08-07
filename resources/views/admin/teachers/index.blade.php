@@ -18,224 +18,229 @@
         </div>
     </x-slot>
 
-    <!-- Teachers List -->
+    <!-- Teachers List Accordion -->
     <div class="card card-custom p-4 bg-white mb-4">
-        <h5 class="fw-bold mb-3"><i class="bi bi-person-workspace text-primary me-2"></i> Carga Horaria por Docente</h5>
-        <div class="table-responsive">
-            <table class="table table-hover align-middle table-custom mb-0">
-                <thead>
-                    <tr>
-                        <th>Docente</th>
-                        <th>Contacto</th>
-                        <th>Carga Horaria / Clases Impartidas</th>
-                        <th class="text-end">Acciones Docente</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @forelse($teachers as $teacher)
-                        <tr>
-                            <td style="width: 25%;">
-                                <div class="fw-bold text-dark fs-6">{{ $teacher->nombre_completo }}</div>
-                                <span class="badge bg-info text-white">DOCENTE BACHILLERATO</span>
-                            </td>
-                            <td style="width: 20%;">
-                                <div class="small"><i class="bi bi-envelope text-muted me-1"></i> {{ $teacher->email }}</div>
-                                <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i> {{ $teacher->phone ?? 'Sin registro' }}</div>
-                            </td>
-                            <td>
-                                @forelse($teacher->docenteGrupos as $assignment)
-                                    <div class="d-inline-block border rounded p-2 mb-2 bg-light me-2 align-top shadow-sm position-relative">
-                                        <div class="fw-bold text-primary">
-                                            <i class="bi bi-book-half me-1"></i> {{ $assignment->materia?->nombre ?? 'Asignatura' }}
-                                        </div>
-                                        <div class="small text-dark">
-                                            <span class="badge bg-secondary me-1">Grupo {{ $assignment->grupo->codigo_grupo }}</span>
-                                            <span class="badge bg-dark">{{ ucfirst($assignment->dia_semana) }}</span>
-                                        </div>
-                                        <div class="small text-muted">
-                                            <i class="bi bi-clock me-1"></i> {{ substr($assignment->hora_inicio, 0, 5) }} - {{ substr($assignment->hora_fin, 0, 5) }}
-                                            @if($assignment->aula)
-                                                | <i class="bi bi-geo-alt me-1"></i> {{ $assignment->aula }}
-                                            @endif
-                                        </div>
-                                        <div class="mt-2 d-flex gap-2 border-top pt-1">
-                                            <button class="btn btn-link text-primary p-0 small text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalEditAssignment-{{ $assignment->id }}" title="Editar Horario">
-                                                <i class="bi bi-pencil me-1"></i> Editar Horario
-                                            </button>
-                                            <form action="{{ route('admin.teachers.removeAssignment', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Desasignar este horario/materia al docente?');">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">
-                                                    <i class="bi bi-trash me-1"></i> Eliminar
-                                                </button>
-                                            </form>
-                                        </div>
+        <h5 class="fw-bold mb-3"><i class="bi bi-person-workspace text-primary me-2"></i> Plantilla Docente y Carga Horaria</h5>
+        
+        <div class="accordion" id="accordionTeachers">
+            @forelse($teachers as $teacher)
+                <div class="accordion-item card-custom border mb-3 overflow-hidden">
+                    <h2 class="accordion-header" id="headingTeacher-{{ $teacher->id }}">
+                        <div class="accordion-button collapsed py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTeacher-{{ $teacher->id }}" aria-expanded="false" aria-controls="collapseTeacher-{{ $teacher->id }}">
+                            <div class="d-flex align-items-center me-auto">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold me-3" style="width: 44px; height: 44px;">
+                                    <i class="bi bi-person-workspace fs-5"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0 fs-6">{{ $teacher->nombre_formateado }}</h6>
+                                    <small class="text-muted"><i class="bi bi-envelope me-1"></i> {{ $teacher->email }} | <i class="bi bi-telephone me-1"></i> {{ $teacher->phone ?? 'Sin teléfono' }}</small>
+                                </div>
+                            </div>
 
-                                        <!-- Modal Edit Assignment -->
-                                        <div class="modal fade text-start" id="modalEditAssignment-{{ $assignment->id }}" tabindex="-1" aria-hidden="true">
-                                            <div class="modal-dialog">
-                                                <div class="modal-content card-custom">
-                                                    <form action="{{ route('admin.teachers.updateAssignment', $assignment) }}" method="POST">
-                                                        @csrf
-                                                        @method('PUT')
-                                                        <input type="hidden" name="form_modal_id" value="modalEditAssignment-{{ $assignment->id }}">
-                                                        <div class="modal-header">
-                                                            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i> Editar Horario / Clase</h5>
-                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                        </div>
-                                                        <div class="modal-body">
-                                                            @if($errors->any() && old('form_modal_id') === 'modalEditAssignment-' . $assignment->id)
-                                                                <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
-                                                                    <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
-                                                                    <ul class="mb-0 mt-1 ps-3">
-                                                                        @foreach($errors->all() as $error)
-                                                                            <li>{{ $error }}</li>
-                                                                        @endforeach
-                                                                    </ul>
-                                                                </div>
-                                                            @endif
-
-                                                            <div class="mb-3">
-                                                                <label class="form-label fw-semibold">Asignatura / Materia</label>
-                                                                <select name="materia_id" class="form-select @error('materia_id') is-invalid @enderror" required>
-                                                                    @foreach($materias as $materia)
-                                                                        <option value="{{ $materia->id }}" {{ old('materia_id', $assignment->materia_id) == $materia->id ? 'selected' : '' }}>
-                                                                            {{ $materia->nombre }} ({{ $materia->clave }})
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label fw-semibold">Grupo Alumno</label>
-                                                                <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
-                                                                    @foreach($groups as $group)
-                                                                        <option value="{{ $group->id }}" {{ old('group_id', $assignment->grupo_id) == $group->id ? 'selected' : '' }}>
-                                                                            Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
-                                                                        </option>
-                                                                    @endforeach
-                                                                </select>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label fw-semibold">Día de la Semana</label>
-                                                                <select name="dia_semana" class="form-select @error('dia_semana') is-invalid @enderror" required>
-                                                                    <option value="lunes" {{ old('dia_semana', $assignment->dia_semana) == 'lunes' ? 'selected' : '' }}>Lunes</option>
-                                                                    <option value="martes" {{ old('dia_semana', $assignment->dia_semana) == 'martes' ? 'selected' : '' }}>Martes</option>
-                                                                    <option value="miercoles" {{ old('dia_semana', $assignment->dia_semana) == 'miercoles' ? 'selected' : '' }}>Miércoles</option>
-                                                                    <option value="jueves" {{ old('dia_semana', $assignment->dia_semana) == 'jueves' ? 'selected' : '' }}>Jueves</option>
-                                                                    <option value="viernes" {{ old('dia_semana', $assignment->dia_semana) == 'viernes' ? 'selected' : '' }}>Viernes</option>
-                                                                    <option value="sabado" {{ old('dia_semana', $assignment->dia_semana) == 'sabado' ? 'selected' : '' }}>Sábado</option>
-                                                                </select>
-                                                            </div>
-                                                            <div class="row">
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label class="form-label fw-semibold">Hora Inicio</label>
-                                                                    <input type="time" name="start_time" class="form-control @error('start_time') is-invalid @enderror" value="{{ old('start_time', substr($assignment->hora_inicio, 0, 5)) }}" required>
-                                                                </div>
-                                                                <div class="col-md-6 mb-3">
-                                                                    <label class="form-label fw-semibold">Hora Fin</label>
-                                                                    <input type="time" name="end_time" class="form-control @error('end_time') is-invalid @enderror" value="{{ old('end_time', substr($assignment->hora_fin, 0, 5)) }}" required>
-                                                                </div>
-                                                            </div>
-                                                            <div class="mb-3">
-                                                                <label class="form-label fw-semibold">Aula / Salón (Opcional)</label>
-                                                                <input type="text" name="aula" class="form-control @error('aula') is-invalid @enderror" value="{{ old('aula', $assignment->aula) }}">
-                                                            </div>
-                                                        </div>
-                                                        <div class="modal-footer">
-                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                                                            <button type="submit" class="btn btn-warning btn-sm fw-semibold">Actualizar Horario</button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @empty
-                                    <span class="text-muted small">Sin materias ni clases asignadas aún.</span>
-                                @endforelse
-                            </td>
-                            <td class="text-end" style="width: 15%;">
-                                <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditTeacher-{{ $teacher->id }}" title="Editar Docente">
-                                    <i class="bi bi-pencil"></i>
+                            <div class="d-flex align-items-center gap-2 me-3" onclick="event.stopPropagation();">
+                                <span class="badge bg-secondary rounded-pill me-2">
+                                    <i class="bi bi-book me-1"></i> {{ $teacher->docenteGrupos->count() }} {{ Str::plural('clase', $teacher->docenteGrupos->count()) }}
+                                </span>
+                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditTeacher-{{ $teacher->id }}" title="Editar Datos del Docente">
+                                    <i class="bi bi-pencil me-1"></i> Editar Datos
                                 </button>
                                 <form action="{{ route('admin.teachers.destroyTeacher', $teacher) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar al docente {{ $teacher->nombre_completo }}?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Docente">
-                                        <i class="bi bi-trash"></i>
+                                        <i class="bi bi-trash me-1"></i> Eliminar
                                     </button>
                                 </form>
+                            </div>
+                        </div>
+                    </h2>
 
-                                <!-- Modal Edit Teacher -->
-                                <div class="modal fade text-start" id="modalEditTeacher-{{ $teacher->id }}" tabindex="-1" aria-hidden="true">
-                                    <div class="modal-dialog modal-lg">
-                                        <div class="modal-content card-custom">
-                                            <form action="{{ route('admin.teachers.updateTeacher', $teacher) }}" method="POST">
-                                                @csrf
-                                                @method('PUT')
-                                                <input type="hidden" name="form_modal_id" value="modalEditTeacher-{{ $teacher->id }}">
-                                                <div class="modal-header">
-                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Datos de Docente</h5>
-                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                                <div class="modal-body">
-                                                    @if($errors->any() && old('form_modal_id') === 'modalEditTeacher-' . $teacher->id)
-                                                        <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
-                                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
-                                                            <ul class="mb-0 mt-1 ps-3">
-                                                                @foreach($errors->all() as $error)
-                                                                    <li>{{ $error }}</li>
+                    <div id="collapseTeacher-{{ $teacher->id }}" class="accordion-collapse collapse" aria-labelledby="headingTeacher-{{ $teacher->id }}" data-bs-parent="#accordionTeachers">
+                        <div class="accordion-body bg-light border-top p-4">
+                            <h6 class="fw-bold text-primary mb-3"><i class="bi bi-calendar-week me-2"></i> Materias, Grupos y Horarios Asignados</h6>
+                            
+                            @forelse($teacher->docenteGrupos as $assignment)
+                                <div class="d-inline-block border rounded p-3 mb-2 bg-white me-3 align-top shadow-sm position-relative" style="min-width: 260px;">
+                                    <div class="fw-bold text-primary fs-6 mb-1">
+                                        <i class="bi bi-book-half me-1"></i> {{ $assignment->materia?->nombre ?? 'Asignatura' }}
+                                    </div>
+                                    <div class="small text-dark mb-1">
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-1">Grupo {{ $assignment->grupo->codigo_grupo }}</span>
+                                        <span class="badge bg-dark">{{ ucfirst($assignment->dia_semana) }}</span>
+                                    </div>
+                                    <div class="small text-muted mb-2">
+                                        <i class="bi bi-clock me-1"></i> {{ substr($assignment->hora_inicio, 0, 5) }} - {{ substr($assignment->hora_fin, 0, 5) }} hrs
+                                        @if($assignment->aula)
+                                            <br><i class="bi bi-geo-alt me-1"></i> Aula: {{ $assignment->aula }}
+                                        @endif
+                                    </div>
+                                    <div class="d-flex gap-2 border-top pt-2 mt-1">
+                                        <button class="btn btn-link text-primary p-0 small text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalEditAssignment-{{ $assignment->id }}" title="Editar Horario">
+                                            <i class="bi bi-pencil me-1"></i> Editar Horario
+                                        </button>
+                                        <form action="{{ route('admin.teachers.removeAssignment', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Desasignar este horario/materia al docente?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">
+                                                <i class="bi bi-trash me-1"></i> Eliminar
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Modal Edit Assignment -->
+                                    <div class="modal fade text-start" id="modalEditAssignment-{{ $assignment->id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content card-custom">
+                                                <form action="{{ route('admin.teachers.updateAssignment', $assignment) }}" method="POST">
+                                                    @csrf
+                                                    @method('PUT')
+                                                    <input type="hidden" name="form_modal_id" value="modalEditAssignment-{{ $assignment->id }}">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i> Editar Horario / Clase</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        @if($errors->any() && old('form_modal_id') === 'modalEditAssignment-' . $assignment->id)
+                                                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                                                <ul class="mb-0 mt-1 ps-3">
+                                                                    @foreach($errors->all() as $error)
+                                                                        <li>{{ $error }}</li>
+                                                                    @endforeach
+                                                                </ul>
+                                                            </div>
+                                                        @endif
+
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Asignatura / Materia</label>
+                                                            <select name="materia_id" class="form-select @error('materia_id') is-invalid @enderror" required>
+                                                                @foreach($materias as $materia)
+                                                                    <option value="{{ $materia->id }}" {{ old('materia_id', $assignment->materia_id) == $materia->id ? 'selected' : '' }}>
+                                                                        {{ $materia->nombre }} ({{ $materia->clave }})
+                                                                    </option>
                                                                 @endforeach
-                                                            </ul>
+                                                            </select>
                                                         </div>
-                                                    @endif
-
-                                                    <div class="row">
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">Nombre(s)</label>
-                                                            <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $teacher->nombre) }}" required>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Grupo Alumno</label>
+                                                            <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
+                                                                @foreach($groups as $group)
+                                                                    <option value="{{ $group->id }}" {{ old('group_id', $assignment->grupo_id) == $group->id ? 'selected' : '' }}>
+                                                                        Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
+                                                                    </option>
+                                                                @endforeach
+                                                            </select>
                                                         </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">Apellido Paterno</label>
-                                                            <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno', $teacher->apellido_paterno) }}" required>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Día de la Semana</label>
+                                                            <select name="dia_semana" class="form-select @error('dia_semana') is-invalid @enderror" required>
+                                                                <option value="lunes" {{ old('dia_semana', $assignment->dia_semana) == 'lunes' ? 'selected' : '' }}>Lunes</option>
+                                                                <option value="martes" {{ old('dia_semana', $assignment->dia_semana) == 'martes' ? 'selected' : '' }}>Martes</option>
+                                                                <option value="miercoles" {{ old('dia_semana', $assignment->dia_semana) == 'miercoles' ? 'selected' : '' }}>Miércoles</option>
+                                                                <option value="jueves" {{ old('dia_semana', $assignment->dia_semana) == 'jueves' ? 'selected' : '' }}>Jueves</option>
+                                                                <option value="viernes" {{ old('dia_semana', $assignment->dia_semana) == 'viernes' ? 'selected' : '' }}>Viernes</option>
+                                                                <option value="sabado" {{ old('dia_semana', $assignment->dia_semana) == 'sabado' ? 'selected' : '' }}>Sábado</option>
+                                                            </select>
                                                         </div>
-                                                        <div class="col-md-4 mb-3">
-                                                            <label class="form-label fw-semibold">Apellido Materno</label>
-                                                            <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno', $teacher->apellido_materno) }}">
+                                                        <div class="row">
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label fw-semibold">Hora Inicio</label>
+                                                                <input type="time" name="start_time" class="form-control @error('start_time') is-invalid @enderror" value="{{ old('start_time', substr($assignment->hora_inicio, 0, 5)) }}" required>
+                                                            </div>
+                                                            <div class="col-md-6 mb-3">
+                                                                <label class="form-label fw-semibold">Hora Fin</label>
+                                                                <input type="time" name="end_time" class="form-control @error('end_time') is-invalid @enderror" value="{{ old('end_time', substr($assignment->hora_fin, 0, 5)) }}" required>
+                                                            </div>
+                                                        </div>
+                                                        <div class="mb-3">
+                                                            <label class="form-label fw-semibold">Aula / Salón (Opcional)</label>
+                                                            <input type="text" name="aula" class="form-control @error('aula') is-invalid @enderror" value="{{ old('aula', $assignment->aula) }}">
                                                         </div>
                                                     </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold">Correo Electrónico (Login)</label>
-                                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $teacher->email) }}" required>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                        <button type="submit" class="btn btn-warning btn-sm fw-semibold">Actualizar Horario</button>
                                                     </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold">Teléfono</label>
-                                                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $teacher->phone) }}">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold">Nueva Contraseña (Opcional)</label>
-                                                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Dejar en blanco para conservar actual">
-                                                    </div>
-                                                </div>
-                                                <div class="modal-footer">
-                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
-                                                    <button type="submit" class="btn btn-primary btn-sm">Actualizar Docente</button>
-                                                </div>
-                                            </form>
+                                                </form>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
-                            </td>
-                        </tr>
-                    @empty
-                        <tr>
-                            <td colspan="4" class="text-center py-4 text-muted">
-                                <i class="bi bi-person-workspace fs-3 d-block mb-2"></i> No hay profesores registrados.
-                            </td>
-                        </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                            @empty
+                                <div class="alert alert-secondary mb-0 small">
+                                    <i class="bi bi-info-circle me-1"></i> Este docente no tiene materias ni clases asignadas actualmente. Utilice el botón superior <strong>"Asignar Clase / Horario"</strong> para asignarle materias y grupos.
+                                </div>
+                            @endforelse
+                        </div>
+                    </div>
+
+                    <!-- Modal Edit Teacher -->
+                    <div class="modal fade text-start" id="modalEditTeacher-{{ $teacher->id }}" tabindex="-1" aria-hidden="true">
+                        <div class="modal-dialog modal-lg">
+                            <div class="modal-content card-custom">
+                                <form action="{{ route('admin.teachers.updateTeacher', $teacher) }}" method="POST">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="form_modal_id" value="modalEditTeacher-{{ $teacher->id }}">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Datos de Docente</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        @if($errors->any() && old('form_modal_id') === 'modalEditTeacher-' . $teacher->id)
+                                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                                <ul class="mb-0 mt-1 ps-3">
+                                                    @foreach($errors->all() as $error)
+                                                        <li>{{ $error }}</li>
+                                                    @endforeach
+                                                </ul>
+                                            </div>
+                                        @endif
+
+                                        <div class="row">
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label fw-semibold">Nombre(s)</label>
+                                                <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $teacher->nombre) }}" required>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label fw-semibold">Apellido Paterno</label>
+                                                <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno', $teacher->apellido_paterno) }}" required>
+                                            </div>
+                                            <div class="col-md-4 mb-3">
+                                                <label class="form-label fw-semibold">Apellido Materno</label>
+                                                <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno', $teacher->apellido_materno) }}">
+                                            </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Correo Electrónico (Login)</label>
+                                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $teacher->email) }}" required>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Teléfono</label>
+                                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $teacher->phone) }}">
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Nueva Contraseña (Opcional)</label>
+                                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Dejar en blanco para conservar actual">
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                        <button type="submit" class="btn btn-primary btn-sm">Actualizar Docente</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-person-workspace display-4 d-block mb-2"></i>
+                    <h5 class="fw-bold">No hay docentes registrados</h5>
+                    <p class="small mb-0">Utilice el botón "Nuevo Docente" para dar de alta profesores en el sistema.</p>
+                </div>
+            @endforelse
         </div>
     </div>
 
@@ -378,7 +383,7 @@
                             <select name="teacher_id" class="form-select @error('teacher_id') is-invalid @enderror" required>
                                 <option value="">-- Seleccionar Docente --</option>
                                 @foreach($teachers as $teacher)
-                                    <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>{{ $teacher->nombre_completo }} ({{ $teacher->email }})</option>
+                                    <option value="{{ $teacher->id }}" {{ old('teacher_id') == $teacher->id ? 'selected' : '' }}>{{ $teacher->nombre_formateado }} ({{ $teacher->email }})</option>
                                 @endforeach
                             </select>
                         </div>

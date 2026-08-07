@@ -60,7 +60,7 @@
                     </div>
                 </div>
                 <span class="badge bg-dark px-3 py-2 fs-6">
-                    <i class="bi bi-person-workspace me-1"></i> Prof. {{ auth()->user()->nombre_completo }}
+                    <i class="bi bi-person-workspace me-1"></i> Prof. {{ auth()->user()->nombre_formateado }}
                 </span>
             </div>
         </div>
@@ -119,7 +119,7 @@
                             <tr>
                                 <td><span class="font-monospace fw-bold">{{ $row->student->matricula }}</span></td>
                                 <td>
-                                    <div class="fw-bold text-dark">{{ $row->student->nombre_completo }}</div>
+                                    <div class="fw-bold text-dark">{{ $row->student->nombre_formateado }}</div>
                                 </td>
                                 <td>{{ $row->check_in_time ?? '--:--' }}</td>
                                 <td>{{ $row->check_out_time ?? '--:--' }}</td>
@@ -158,7 +158,7 @@
                                                     <div class="modal-body">
                                                         <div class="mb-3">
                                                             <label class="form-label fw-semibold">Estudiante</label>
-                                                            <input type="text" class="form-control" value="{{ $row->student->nombre_completo }}" disabled>
+                                                            <input type="text" class="form-control" value="{{ $row->student->nombre_formateado }}" disabled>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-semibold">Estado de Asistencia</label>

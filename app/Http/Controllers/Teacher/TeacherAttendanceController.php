@@ -48,13 +48,17 @@ class TeacherAttendanceController extends Controller
         $metrics = ['total' => 0, 'presentes' => 0, 'retardos' => 0, 'faltas' => 0, 'justificados' => 0];
 
         if ($selectedSchedule && $selectedGroup) {
-            // Get all active students in group
+            // Get all active students in group ordered alphabetically by Apellido Paterno, Materno, Nombre
             $students = Estudiante::with('user')
                 ->where('grupo_id', $selectedGroup->id)
                 ->where('is_active', true)
                 ->get()
-                ->sortBy(function ($s) {
-                    return $s->user->apellido_paterno;
+                ->sort(function ($a, $b) {
+                    $comp = strnatcasecmp($a->user->apellido_paterno ?? '', $b->user->apellido_paterno ?? '');
+                    if ($comp !== 0) return $comp;
+                    $comp = strnatcasecmp($a->user->apellido_materno ?? '', $b->user->apellido_materno ?? '');
+                    if ($comp !== 0) return $comp;
+                    return strnatcasecmp($a->user->nombre ?? '', $b->user->nombre ?? '');
                 });
 
             // Get attendances for selected date
@@ -144,9 +148,17 @@ class TeacherAttendanceController extends Controller
             $materiaClave = 'GRUPO';
         }
 
-        $students = Estudiante::with('user')->where('grupo_id', $group->id)->get()->sortBy(function($s) {
-            return $s->user->apellido_paterno;
-        });
+        $students = Estudiante::with('user')
+            ->where('grupo_id', $group->id)
+            ->get()
+            ->sort(function ($a, $b) {
+                $comp = strnatcasecmp($a->user->apellido_paterno ?? '', $b->user->apellido_paterno ?? '');
+                if ($comp !== 0) return $comp;
+                $comp = strnatcasecmp($a->user->apellido_materno ?? '', $b->user->apellido_materno ?? '');
+                if ($comp !== 0) return $comp;
+                return strnatcasecmp($a->user->nombre ?? '', $b->user->nombre ?? '');
+            });
+
         $attendances = Asistencia::whereIn('estudiante_id', $students->pluck('id'))
             ->whereDate('fecha', $date)
             ->get()
@@ -164,7 +176,7 @@ class TeacherAttendanceController extends Controller
                 $att = $attendances->get($student->id);
                 fputcsv($handle, [
                     $student->matricula,
-                    $student->nombre_completo,
+                    $student->nombre_formateado,
                     $date,
                     $att?->hora_entrada ?? 'N/A',
                     $att?->hora_salida ?? 'N/A',
