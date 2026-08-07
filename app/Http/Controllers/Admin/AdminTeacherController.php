@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Grupo;
+use App\Models\Materia;
 use App\Models\DocenteGrupo;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
@@ -15,14 +16,15 @@ class AdminTeacherController extends Controller
     public function index()
     {
         $teachers = User::whereIn('role', ['teacher', 'docente'])
-            ->with(['docenteGrupos.grupo'])
+            ->with(['docenteGrupos.grupo', 'docenteGrupos.materia'])
             ->get();
 
         $groups = Grupo::orderBy('codigo_grupo')->get();
+        $materias = Materia::orderBy('nombre')->get();
 
-        AuditLog::log('READ', 'users', null, 'Consulta de docentes y asignaciones');
+        AuditLog::log('READ', 'users', null, 'Consulta de plantilla docente, materias y horarios');
 
-        return view('admin.teachers.index', compact('teachers', 'groups'));
+        return view('admin.teachers.index', compact('teachers', 'groups', 'materias'));
     }
 
     public function storeTeacher(Request $request)
@@ -54,35 +56,55 @@ class AdminTeacherController extends Controller
         return redirect()->route('admin.teachers.index')->with('success', "Docente {$teacher->nombre_completo} registrado exitosamente.");
     }
 
+    public function storeMateria(Request $request)
+    {
+        $validated = $request->validate([
+            'clave' => 'required|string|max:20|unique:materias,clave',
+            'nombre' => 'required|string|max:150',
+            'semestre' => 'required|integer|min:1|max:6',
+        ]);
+
+        $materia = Materia::create($validated);
+
+        AuditLog::log('WRITE', 'materias', $materia->id, "Asignatura creada: {$materia->nombre} ({$materia->clave})");
+
+        return redirect()->route('admin.teachers.index')->with('success', "Asignatura {$materia->nombre} registrada en el catálogo.");
+    }
+
     public function assignGroup(Request $request)
     {
         $validated = $request->validate([
             'teacher_id' => 'required|exists:users,id',
+            'materia_id' => 'required|exists:materias,id',
             'group_id' => 'required|exists:grupos,id',
-            'subject_name' => 'required|string|max:100',
-            'start_time' => 'nullable',
-            'end_time' => 'nullable',
+            'dia_semana' => 'required|in:lunes,martes,miercoles,jueves,viernes,sabado',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'aula' => 'nullable|string|max:50',
         ]);
 
         $assignment = DocenteGrupo::create([
             'docente_id' => $validated['teacher_id'],
+            'materia_id' => $validated['materia_id'],
             'grupo_id' => $validated['group_id'],
-            'materia' => $validated['subject_name'],
-            'hora_inicio' => $validated['start_time'] ?? null,
-            'hora_fin' => $validated['end_time'] ?? null,
+            'dia_semana' => $validated['dia_semana'],
+            'hora_inicio' => $validated['start_time'],
+            'hora_fin' => $validated['end_time'],
+            'aula' => $validated['aula'] ?? null,
         ]);
 
-        AuditLog::log('WRITE', 'docente_grupo', $assignment->id, "Asignación de materia {$assignment->materia} a docente");
+        $materia = Materia::find($validated['materia_id']);
+        AuditLog::log('WRITE', 'docente_grupo', $assignment->id, "Asignación de clase {$materia->nombre} a docente en horario {$validated['dia_semana']} {$validated['start_time']}-{$validated['end_time']}");
 
-        return redirect()->route('admin.teachers.index')->with('success', "Asignación registrada exitosamente.");
+        return redirect()->route('admin.teachers.index')->with('success', "Horario y materia asignados exitosamente al docente.");
     }
 
     public function removeAssignment(DocenteGrupo $teacherGroup)
     {
-        $subject = $teacherGroup->materia;
+        $materiaNombre = $teacherGroup->materia?->nombre ?? 'Clase';
         $teacherGroup->delete();
-        AuditLog::log('WRITE', 'docente_grupo', null, "Asignación eliminada: {$subject}");
+        AuditLog::log('WRITE', 'docente_grupo', null, "Asignación eliminada: {$materiaNombre}");
 
-        return redirect()->route('admin.teachers.index')->with('success', "Asignación de {$subject} eliminada.");
+        return redirect()->route('admin.teachers.index')->with('success', "Asignación de {$materiaNombre} eliminada.");
     }
 }

@@ -11,11 +11,12 @@ return new class extends Migration
         Schema::create('docente_grupo', function (Blueprint $table) {
             $table->id();
             $table->foreignId('docente_id')->constrained('users')->onDelete('cascade');
+            $table->foreignId('materia_id')->constrained('materias')->onDelete('cascade');
             $table->foreignId('grupo_id')->constrained('grupos')->onDelete('cascade');
-            $table->string('materia');
+            $table->enum('dia_semana', ['lunes', 'martes', 'miercoles', 'jueves', 'viernes', 'sabado'])->default('lunes');
             $table->time('hora_inicio')->nullable();
             $table->time('hora_fin')->nullable();
-            $table->string('dias_semana')->default('1,2,3,4,5');
+            $table->string('aula')->nullable(); // e.g. Aula 101, Lab de Química
             $table->timestamps();
         });
 

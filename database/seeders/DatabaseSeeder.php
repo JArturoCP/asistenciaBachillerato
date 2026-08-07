@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Grupo;
+use App\Models\Materia;
 use App\Models\Estudiante;
 use App\Models\Tutor;
 use App\Models\DocenteGrupo;
@@ -11,7 +12,6 @@ use App\Models\Consentimiento;
 use App\Models\AuditLog;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
@@ -28,13 +28,21 @@ class DatabaseSeeder extends Seeder
             'phone' => '5551234567',
         ]);
 
-        // 2. Create Groups
+        // 2. Create Groups (Bachillerato)
         $group1A = Grupo::create(['codigo_grupo' => '1A-MAT', 'grado' => '1', 'turno' => 'matutino', 'ciclo_escolar' => '2026-2027']);
         $group1B = Grupo::create(['codigo_grupo' => '1B-MAT', 'grado' => '1', 'turno' => 'matutino', 'ciclo_escolar' => '2026-2027']);
         $group2A = Grupo::create(['codigo_grupo' => '2A-MAT', 'grado' => '2', 'turno' => 'matutino', 'ciclo_escolar' => '2026-2027']);
         $group3A = Grupo::create(['codigo_grupo' => '3A-VESP', 'grado' => '3', 'turno' => 'vespertino', 'ciclo_escolar' => '2026-2027']);
 
-        // 3. Create Teachers
+        // 3. Create Materias (Bachillerato Curriculum)
+        $mat1 = Materia::create(['clave' => 'MAT-101', 'nombre' => 'Matemáticas I', 'semestre' => 1]);
+        $mat2 = Materia::create(['clave' => 'MAT-201', 'nombre' => 'Matemáticas II', 'semestre' => 2]);
+        $quim1 = Materia::create(['clave' => 'QUIM-101', 'nombre' => 'Química I', 'semestre' => 1]);
+        $fis1 = Materia::create(['clave' => 'FIS-301', 'nombre' => 'Física I', 'semestre' => 3]);
+        $ing1 = Materia::create(['clave' => 'ING-101', 'nombre' => 'Inglés I', 'semestre' => 1]);
+        $hist1 = Materia::create(['clave' => 'HIST-101', 'nombre' => 'Historia de México I', 'semestre' => 1]);
+
+        // 4. Create Teachers
         $teacher1 = User::create([
             'nombre' => 'Roberto',
             'apellido_paterno' => 'Martínez',
@@ -55,12 +63,17 @@ class DatabaseSeeder extends Seeder
             'phone' => '5553334444',
         ]);
 
-        // Teacher Assignments
-        DocenteGrupo::create(['docente_id' => $teacher1->id, 'grupo_id' => $group1A->id, 'materia' => 'Matemáticas I', 'hora_inicio' => '07:00:00', 'hora_fin' => '08:40:00']);
-        DocenteGrupo::create(['docente_id' => $teacher1->id, 'grupo_id' => $group2A->id, 'materia' => 'Matemáticas II', 'hora_inicio' => '08:40:00', 'hora_fin' => '10:20:00']);
-        DocenteGrupo::create(['docente_id' => $teacher2->id, 'grupo_id' => $group1A->id, 'materia' => 'Química I', 'hora_inicio' => '08:40:00', 'hora_fin' => '10:20:00']);
+        // Teacher High School Schedule Assignments (Multiple subjects, groups, days & hours per teacher)
+        // Prof. Roberto teaches Matemáticas I to 1A-MAT and Matemáticas II to 2A-MAT
+        DocenteGrupo::create(['docente_id' => $teacher1->id, 'materia_id' => $mat1->id, 'grupo_id' => $group1A->id, 'dia_semana' => 'lunes', 'hora_inicio' => '07:00:00', 'hora_fin' => '08:40:00', 'aula' => 'Aula 101']);
+        DocenteGrupo::create(['docente_id' => $teacher1->id, 'materia_id' => $mat1->id, 'grupo_id' => $group1A->id, 'dia_semana' => 'miercoles', 'hora_inicio' => '07:00:00', 'hora_fin' => '08:40:00', 'aula' => 'Aula 101']);
+        DocenteGrupo::create(['docente_id' => $teacher1->id, 'materia_id' => $mat2->id, 'grupo_id' => $group2A->id, 'dia_semana' => 'martes', 'hora_inicio' => '08:40:00', 'hora_fin' => '10:20:00', 'aula' => 'Aula 202']);
 
-        // 4. Create Guardians (Tutores)
+        // Profa. Laura teaches Química I to 1A-MAT and Física I to 3A-VESP
+        DocenteGrupo::create(['docente_id' => $teacher2->id, 'materia_id' => $quim1->id, 'grupo_id' => $group1A->id, 'dia_semana' => 'lunes', 'hora_inicio' => '08:40:00', 'hora_fin' => '10:20:00', 'aula' => 'Lab. de Química']);
+        DocenteGrupo::create(['docente_id' => $teacher2->id, 'materia_id' => $fis1->id, 'grupo_id' => $group3A->id, 'dia_semana' => 'jueves', 'hora_inicio' => '14:00:00', 'hora_fin' => '15:40:00', 'aula' => 'Lab. de Física']);
+
+        // 5. Create Guardians (Tutores)
         $parentUser1 = User::create([
             'nombre' => 'Carlos',
             'apellido_paterno' => 'Pérez',
@@ -97,7 +110,7 @@ class DatabaseSeeder extends Seeder
             'alertas_correo_activadas' => true,
         ]);
 
-        // 5. Create Students (Estudiantes) - Person user + Estudiante profile
+        // 6. Create Students (Estudiantes)
         $studentsData = [
             ['nombre' => 'Juan Manuel', 'apellido_paterno' => 'Pérez', 'apellido_materno' => 'Gómez', 'matricula' => 'BAC-2026-001', 'fecha_nacimiento' => '2009-05-14', 'grupo_id' => $group1A->id],
             ['nombre' => 'Sofía Valentina', 'apellido_paterno' => 'Pérez', 'apellido_materno' => 'Gómez', 'matricula' => 'BAC-2026-002', 'fecha_nacimiento' => '2010-08-20', 'grupo_id' => $group1B->id],
@@ -121,7 +134,6 @@ class DatabaseSeeder extends Seeder
                 'grupo_id' => $sData['grupo_id'],
             ]);
 
-            // Link first 2 students to guardian1, 3rd to guardian2
             if ($idx < 2) {
                 $guardian1->estudiantes()->attach($student->id, ['es_contacto_principal' => true, 'fecha_verificacion' => now()]);
                 Consentimiento::create([
@@ -143,6 +155,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        AuditLog::log('WRITE', 'users', $admin->id, 'Seeder normalizado en español ejecutado exitosamente');
+        AuditLog::log('WRITE', 'users', $admin->id, 'Seeder con materias y carga académica de bachillerato ejecutado');
     }
 }

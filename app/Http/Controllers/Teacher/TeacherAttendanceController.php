@@ -19,14 +19,16 @@ class TeacherAttendanceController extends Controller
         $user = auth()->user();
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
 
-        // 1. Get assigned groups for teacher (or all groups if admin)
+        // 1. Get assigned class schedules for teacher (or all if admin)
         if ($user->isAdmin()) {
+            $classSchedules = DocenteGrupo::with(['grupo', 'materia'])->get();
             $assignedGroupIds = Grupo::pluck('id')->toArray();
         } else {
-            $assignedGroupIds = DocenteGrupo::where('docente_id', $user->id)
-                ->pluck('grupo_id')
-                ->unique()
-                ->toArray();
+            $classSchedules = DocenteGrupo::with(['grupo', 'materia'])
+                ->where('docente_id', $user->id)
+                ->get();
+
+            $assignedGroupIds = $classSchedules->pluck('grupo_id')->unique()->toArray();
         }
 
         $groups = Grupo::whereIn('id', $assignedGroupIds)->orderBy('codigo_grupo')->get();
@@ -78,6 +80,7 @@ class TeacherAttendanceController extends Controller
 
         return view('teacher.attendance.index', compact(
             'groups',
+            'classSchedules',
             'selectedGroup',
             'selectedGroupId',
             'date',

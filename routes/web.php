@@ -54,6 +54,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     // Teachers Management & Assignments
     Route::get('teachers', [AdminTeacherController::class, 'index'])->name('teachers.index');
     Route::post('teachers/store', [AdminTeacherController::class, 'storeTeacher'])->name('teachers.store');
+    Route::post('teachers/materias', [AdminTeacherController::class, 'storeMateria'])->name('teachers.storeMateria');
     Route::post('teachers/assign', [AdminTeacherController::class, 'assignGroup'])->name('teachers.assignGroup');
     Route::delete('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'removeAssignment'])->name('teachers.removeAssignment');
 

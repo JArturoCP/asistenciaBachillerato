@@ -14,11 +14,12 @@ class DocenteGrupo extends Model
 
     protected $fillable = [
         'docente_id',
+        'materia_id',
         'grupo_id',
-        'materia',
+        'dia_semana',
         'hora_inicio',
         'hora_fin',
-        'dias_semana',
+        'aula',
     ];
 
     public function docente(): BelongsTo
@@ -26,14 +27,24 @@ class DocenteGrupo extends Model
         return $this->belongsTo(User::class, 'docente_id');
     }
 
+    public function materia(): BelongsTo
+    {
+        return $this->belongsTo(Materia::class, 'materia_id');
+    }
+
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
 
-    // Alias for backward compatibility
-    public function group(): BelongsTo
+    // Accessor for backward compatibility
+    public function getMateriaAttribute()
     {
-        return $this->grupo();
+        return $this->materia?->nombre ?? 'Sin Asignatura';
+    }
+
+    public function getSubjectNameAttribute()
+    {
+        return $this->materia_attribute;
     }
 }
