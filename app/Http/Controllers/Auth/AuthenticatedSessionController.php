@@ -26,9 +26,18 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        $request->session()->regenerate();
-
         $user = Auth::user();
+
+        // Check if account approval is pending
+        if (! $user->is_approved) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            return redirect()->route('login')->with('error', 'Acceso bloqueado: Su solicitud de registro se encuentra pendiente de aprobación por un administrador.');
+        }
+
+        $request->session()->regenerate();
 
         // Redirect based on role:
         // Superadmin & Admin -> /dashboard

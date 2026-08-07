@@ -16,6 +16,7 @@ class AdminTeacherController extends Controller
     public function index()
     {
         $teachers = User::whereIn('role', ['teacher', 'docente'])
+            ->where('is_approved', true)
             ->with(['docenteGrupos.grupo', 'docenteGrupos.materia'])
             ->get();
 
@@ -55,6 +56,7 @@ class AdminTeacherController extends Controller
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'role' => 'teacher',
+            'is_approved' => true,
         ]);
 
         AuditLog::log('WRITE', 'users', $teacher->id, "Docente registrado: {$teacher->nombre_completo}");
@@ -69,7 +71,7 @@ class AdminTeacherController extends Controller
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email,' . $teacher->id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|digits:10',
             'password' => 'nullable|string|min:8',
         ], [
             'nombre.required' => 'El nombre del docente es obligatorio.',
@@ -78,6 +80,7 @@ class AdminTeacherController extends Controller
             'email.email' => 'Ingrese una dirección de correo válida.',
             'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
             'password.min' => 'La nueva contraseña debe contener al menos 8 caracteres.',
+            'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
         ]);
 
         $updateData = [

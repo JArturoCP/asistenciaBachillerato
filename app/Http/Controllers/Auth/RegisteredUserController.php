@@ -10,6 +10,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules;
 use Illuminate\View\View;
 
@@ -33,10 +34,10 @@ class RegisteredUserController extends Controller
             'apellido_paterno' => ['nullable', 'string', 'max:100'],
             'apellido_materno' => ['nullable', 'string', 'max:100'],
             'name' => ['nullable', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['nullable', 'in:parent,teacher,admin'],
-            'phone' => ['nullable', 'string', 'max:20'],
+            'phone' => ['nullable', 'string', 'digits:10'],
         ], [
             'email.required' => 'El correo electrónico es obligatorio.',
             'email.email' => 'Ingrese una dirección de correo electrónico válida.',
@@ -45,6 +46,7 @@ class RegisteredUserController extends Controller
             'password.confirmed' => 'La confirmación de la contraseña no coincide.',
             'password.min' => 'La contraseña debe contener al menos :min caracteres.',
             'role.in' => 'El rol seleccionado no es válido.',
+            'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
         ]);
 
         if ($request->filled('nombre') && $request->filled('apellido_paterno')) {
@@ -60,6 +62,7 @@ class RegisteredUserController extends Controller
 
         $role = $request->role ?? 'parent';
 
+        // Public registration requires admin approval (is_approved = false)
         $user = User::create([
             'nombre' => $nombre,
             'apellido_paterno' => $apellidoPaterno,
@@ -68,6 +71,7 @@ class RegisteredUserController extends Controller
             'password' => Hash::make($request->password),
             'role' => $role,
             'phone' => $request->phone,
+            'is_approved' => false,
         ]);
 
         // If registering as a parent/tutor, automatically create Tutor profile
@@ -83,16 +87,7 @@ class RegisteredUserController extends Controller
 
         event(new Registered($user));
 
-        Auth::login($user);
-
-        if ($user->isParent()) {
-            return redirect()->route('parent.dashboard');
-        }
-
-        if ($user->isTeacher() && !$user->isAdmin()) {
-            return redirect()->route('teacher.attendance.index');
-        }
-
-        return redirect()->route('dashboard');
+        // Public registration stays pending approval, so DO NOT log in automatically
+        return redirect()->route('login')->with('status', 'Solicitud de registro enviada correctamente. Su cuenta se encuentra pendiente de aprobación por un administrador.');
     }
 }

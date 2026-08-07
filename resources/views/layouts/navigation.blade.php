@@ -46,8 +46,17 @@
                 </a>
             @endif
 
-            {{-- Admin Modules (Dashboard, Grupos, Estudiantes, Docentes, Padres y Consentimientos) --}}
+            {{-- Admin Modules (Dashboard, Grupos, Estudiantes, Docentes, Padres y Consentimientos, Solicitudes) --}}
             @if($isAdmin || $isSuper)
+                @php
+                    $pendingCount = \App\Models\User::pending()->count();
+                @endphp
+                <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.pending-registrations.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.pending-registrations.index') }}">
+                    <i class="bi bi-person-clock me-1"></i> Solicitudes
+                    @if($pendingCount > 0)
+                        <span class="badge bg-danger rounded-pill ms-1">{{ $pendingCount }}</span>
+                    @endif
+                </a>
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.groups.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.groups.index') }}">
                     <i class="bi bi-diagram-3 me-1"></i> Grupos
                 </a>

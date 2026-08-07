@@ -16,7 +16,9 @@ class AdminGuardianController extends Controller
 {
     public function index()
     {
-        $guardians = Tutor::with(['user', 'estudiantes.user', 'consentimientos'])->get();
+        $guardians = Tutor::whereHas('user', function ($q) {
+            $q->where('is_approved', true);
+        })->with(['user', 'estudiantes.user', 'consentimientos'])->get();
         $students = Estudiante::with(['user', 'grupo'])->where('is_active', true)->get();
 
         AuditLog::log('READ', 'tutores', null, 'Consulta de padres/tutores y consentimientos LFPDPPP');
@@ -55,6 +57,7 @@ class AdminGuardianController extends Controller
                 'phone' => $validated['phone'],
                 'password' => Hash::make($validated['password']),
                 'role' => 'parent',
+                'is_approved' => true,
             ]);
 
             $guardian = Tutor::create([
@@ -78,7 +81,7 @@ class AdminGuardianController extends Controller
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email,' . $guardian->user_id,
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|digits:10',
             'relationship' => 'required|in:padre,madre,tutor_legal',
             'password' => 'nullable|string|min:8',
         ], [
@@ -89,6 +92,7 @@ class AdminGuardianController extends Controller
             'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
             'relationship.required' => 'Debe seleccionar el parentesco.',
             'password.min' => 'La contraseña debe contener al menos 8 caracteres.',
+            'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
         ]);
 
         DB::transaction(function () use ($guardian, $validated) {

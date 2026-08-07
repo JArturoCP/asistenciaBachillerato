@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -34,6 +35,18 @@ class LoginRequest extends FormRequest
     }
 
     /**
+     * Get custom Spanish messages for validation errors.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo electrónico válida.',
+            'password.required' => 'La contraseña es obligatoria.',
+        ];
+    }
+
+    /**
      * Attempt to authenticate the request's credentials.
      *
      * @throws ValidationException
@@ -42,11 +55,24 @@ class LoginRequest extends FormRequest
     {
         $this->ensureIsNotRateLimited();
 
+        $email = $this->input('email');
+        $user = User::where('email', $email)->first();
+
+        // 1. Check if email exists in database
+        if (!$user) {
+            RateLimiter::hit($this->throttleKey());
+
+            throw ValidationException::withMessages([
+                'email' => 'El correo electrónico ingresado no se encuentra registrado en el sistema.',
+            ]);
+        }
+
+        // 2. Check if password is valid
         if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
-                'email' => trans('auth.failed'),
+                'password' => 'La contraseña ingresada es incorrecta para este correo electrónico.',
             ]);
         }
 
@@ -68,11 +94,16 @@ class LoginRequest extends FormRequest
 
         $seconds = RateLimiter::availableIn($this->throttleKey());
 
+        $throttleMessage = trans('auth.throttle', [
+            'seconds' => $seconds,
+            'minutes' => ceil($seconds / 60),
+        ]);
+        if (str_contains($throttleMessage, 'auth.throttle')) {
+            $throttleMessage = "Demasiados intentos de acceso. Por favor intente de nuevo en {$seconds} segundos.";
+        }
+
         throw ValidationException::withMessages([
-            'email' => trans('auth.throttle', [
-                'seconds' => $seconds,
-                'minutes' => ceil($seconds / 60),
-            ]),
+            'email' => $throttleMessage,
         ]);
     }
 

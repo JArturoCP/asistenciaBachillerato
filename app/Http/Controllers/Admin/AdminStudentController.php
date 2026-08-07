@@ -74,6 +74,7 @@ class AdminStudentController extends Controller
                 'apellido_paterno' => $validated['apellido_paterno'],
                 'apellido_materno' => $validated['apellido_materno'] ?? null,
                 'role' => 'student',
+                'is_approved' => true,
             ]);
 
             $student = Estudiante::create([

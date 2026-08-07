@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\AdminGroupController;
 use App\Http\Controllers\Admin\AdminStudentController;
 use App\Http\Controllers\Admin\AdminTeacherController;
 use App\Http\Controllers\Admin\AdminGuardianController;
+use App\Http\Controllers\Admin\AdminPendingRegistrationController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
@@ -47,6 +48,11 @@ Route::middleware('auth')->group(function () {
 
 // Admin Routes (RBAC Roles: admin, superadmin)
 Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    // Pending Registration Approval Panel
+    Route::get('pending-registrations', [AdminPendingRegistrationController::class, 'index'])->name('pending-registrations.index');
+    Route::post('pending-registrations/{user}/approve', [AdminPendingRegistrationController::class, 'approve'])->name('pending-registrations.approve');
+    Route::delete('pending-registrations/{user}/reject', [AdminPendingRegistrationController::class, 'reject'])->name('pending-registrations.reject');
+
     // Groups CRUD
     Route::resource('groups', AdminGroupController::class)->except(['create', 'edit', 'show']);
 

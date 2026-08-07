@@ -23,6 +23,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'is_approved',
     ];
 
     protected $hidden = [
@@ -35,6 +36,7 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 
@@ -49,6 +51,11 @@ class User extends Authenticatable
             }
             $user->name = trim("{$user->nombre} {$user->apellido_paterno} {$user->apellido_materno}");
         });
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('is_approved', false);
     }
 
     public function getNombreCompletoAttribute(): string
