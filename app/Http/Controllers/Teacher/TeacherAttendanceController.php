@@ -17,7 +17,7 @@ class TeacherAttendanceController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
+        $date = $request->input('date', Carbon::today('America/Mexico_City')->format('Y-m-d'));
 
         // 1. Get assigned class schedules for teacher (or all if admin)
         $query = DocenteGrupo::with(['grupo', 'materia']);
@@ -103,6 +103,12 @@ class TeacherAttendanceController extends Controller
             'date' => 'required|date',
             'status' => 'required|in:presente,retardo,falta,justificado',
             'notes' => 'nullable|string|max:255',
+        ], [
+            'student_id.required' => 'Debe seleccionar un estudiante.',
+            'student_id.exists' => 'El estudiante seleccionado no existe.',
+            'date.required' => 'La fecha es obligatoria.',
+            'status.required' => 'El estado de asistencia es obligatorio.',
+            'status.in' => 'El estado de asistencia seleccionado no es válido.',
         ]);
 
         $attendance = Asistencia::updateOrCreate(
@@ -114,7 +120,7 @@ class TeacherAttendanceController extends Controller
                 'estado' => $validated['status'],
                 'observaciones' => $validated['notes'],
                 'metodo_escaneo' => 'manual_admin',
-                'hora_entrada' => $validated['status'] !== 'falta' ? ($request->check_in_time ?? Carbon::now()->format('H:i:s')) : null,
+                'hora_entrada' => $validated['status'] !== 'falta' ? ($request->check_in_time ?? Carbon::now('America/Mexico_City')->format('H:i:s')) : null,
             ]
         );
 
@@ -127,7 +133,7 @@ class TeacherAttendanceController extends Controller
     {
         $scheduleId = $request->input('schedule_id');
         $groupId = $request->input('group_id');
-        $date = $request->input('date', Carbon::today()->format('Y-m-d'));
+        $date = $request->input('date', Carbon::today('America/Mexico_City')->format('Y-m-d'));
 
         if ($scheduleId) {
             $schedule = DocenteGrupo::with(['grupo', 'materia'])->findOrFail($scheduleId);

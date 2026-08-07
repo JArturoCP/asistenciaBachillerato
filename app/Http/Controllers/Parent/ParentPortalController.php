@@ -33,11 +33,11 @@ class ParentPortalController extends Controller
         $selectedStudentId = $request->input('student_id', $students->first()?->id);
         $selectedStudent = $students->firstWhere('id', $selectedStudentId);
 
-        $today = Carbon::today();
+        $today = Carbon::today('America/Mexico_City');
         $todayAttendance = null;
         $monthlyCalendar = [];
-        $month = $request->input('month', Carbon::now()->month);
-        $year = $request->input('year', Carbon::now()->year);
+        $month = $request->input('month', Carbon::now('America/Mexico_City')->month);
+        $year = $request->input('year', Carbon::now('America/Mexico_City')->year);
 
         if ($selectedStudent) {
             // Today's status
@@ -46,7 +46,7 @@ class ParentPortalController extends Controller
                 ->first();
 
             // Monthly heatmap data
-            $startDate = Carbon::createFromDate($year, $month, 1)->startOfMonth();
+            $startDate = Carbon::createFromDate($year, $month, 1, 'America/Mexico_City')->startOfMonth();
             $endDate = $startDate->copy()->endOfMonth();
 
             $attendancesMonth = Asistencia::where('estudiante_id', $selectedStudent->id)
@@ -102,6 +102,10 @@ class ParentPortalController extends Controller
         $validated = $request->validate([
             'notification_email' => 'required|email',
             'email_alerts_enabled' => 'required|boolean',
+        ], [
+            'notification_email.required' => 'El correo electrónico para notificaciones es obligatorio.',
+            'notification_email.email' => 'Ingrese una dirección de correo válida.',
+            'email_alerts_enabled.required' => 'Debe indicar si desea activar las alertas por correo.',
         ]);
 
         $guardian->update([
@@ -119,6 +123,11 @@ class ParentPortalController extends Controller
         $validated = $request->validate([
             'request_type' => 'required|in:acceso,rectificacion,cancelacion,oposicion',
             'details' => 'required|string|max:500',
+        ], [
+            'request_type.required' => 'Debe seleccionar un tipo de derecho ARCO.',
+            'request_type.in' => 'El tipo de solicitud ARCO seleccionado no es válido.',
+            'details.required' => 'Los detalles o justificación de la solicitud son obligatorios.',
+            'details.max' => 'Los detalles de la solicitud no deben superar los 500 caracteres.',
         ]);
 
         AuditLog::log('ARCO_REQUEST', 'consentimientos', null, "Solicitud ARCO registrada ({$validated['request_type']}): {$validated['details']}");

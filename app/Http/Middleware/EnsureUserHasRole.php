@@ -16,10 +16,17 @@ class EnsureUserHasRole
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        if (! $request->user() || ! in_array($request->user()->role, $roles, true)) {
+        $user = $request->user();
+
+        if (! $user) {
             abort(403, 'No tiene permisos autorizados para acceder a este módulo.');
         }
 
-        return $next($request);
+        // Superadmin has full privileges on all modules
+        if ($user->role === 'superadmin' || in_array($user->role, $roles, true)) {
+            return $next($request);
+        }
+
+        abort(403, 'No tiene permisos autorizados para acceder a este módulo.');
     }
 }

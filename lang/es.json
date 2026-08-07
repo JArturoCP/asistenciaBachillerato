@@ -1,0 +1,9 @@
+{
+    "These credentials do not match our records.": "Las credenciales ingresadas no coinciden con nuestros registros.",
+    "failed": "Las credenciales ingresadas no coinciden con nuestros registros.",
+    "password": "La contraseña proporcionada es incorrecta.",
+    "throttle": "Demasiados intentos de acceso. Por favor intente de nuevo en :seconds segundos.",
+    "The :attribute field is required.": "El campo :attribute es obligatorio.",
+    "The :attribute must be at least :min characters.": "El campo :attribute debe tener al menos :min caracteres.",
+    "The :attribute must not be greater than :max characters.": "El campo :attribute no debe contener más de :max caracteres."
+}

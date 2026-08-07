@@ -52,6 +52,15 @@ class AdminStudentController extends Controller
             'birth_date' => 'nullable|date',
             'group_id' => 'required|exists:grupos,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'matricula.required' => 'La matrícula estudiantil es obligatoria.',
+            'matricula.unique' => 'La matrícula ingresada ya pertenece a otro estudiante.',
+            'nombre.required' => 'El nombre del estudiante es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno del estudiante es obligatorio.',
+            'group_id.required' => 'Debe asignar un grupo académico al estudiante.',
+            'group_id.exists' => 'El grupo seleccionado no existe.',
+            'foto.image' => 'La fotografía debe ser una imagen en formato JPG, PNG o WEBP.',
+            'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
 
         $photoPath = null;
@@ -92,6 +101,15 @@ class AdminStudentController extends Controller
             'group_id' => 'required|exists:grupos,id',
             'is_active' => 'required|boolean',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+        ], [
+            'matricula.required' => 'La matrícula estudiantil es obligatoria.',
+            'matricula.unique' => 'La matrícula ingresada ya pertenece a otro estudiante.',
+            'nombre.required' => 'El nombre del estudiante es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno del estudiante es obligatorio.',
+            'group_id.required' => 'Debe asignar un grupo académico al estudiante.',
+            'group_id.exists' => 'El grupo seleccionado no existe.',
+            'foto.image' => 'La fotografía debe ser una imagen en formato JPG, PNG o WEBP.',
+            'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
 
         $photoPath = $student->foto;

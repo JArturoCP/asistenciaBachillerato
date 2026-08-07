@@ -31,9 +31,19 @@ class AdminGuardianController extends Controller
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|digits:10',
             'relationship' => 'required|in:padre,madre,tutor_legal',
             'password' => 'required|string|min:8',
+        ], [
+            'nombre.required' => 'El nombre del padre o tutor es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo válida.',
+            'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
+            'relationship.required' => 'Debe seleccionar el parentesco.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.min' => 'La contraseña debe contener al menos 8 caracteres.',
+            'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
         ]);
 
         DB::transaction(function () use ($validated, &$guardian) {
@@ -71,6 +81,14 @@ class AdminGuardianController extends Controller
             'phone' => 'nullable|string|max:20',
             'relationship' => 'required|in:padre,madre,tutor_legal',
             'password' => 'nullable|string|min:8',
+        ], [
+            'nombre.required' => 'El nombre del padre o tutor es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo válida.',
+            'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
+            'relationship.required' => 'Debe seleccionar el parentesco.',
+            'password.min' => 'La contraseña debe contener al menos 8 caracteres.',
         ]);
 
         DB::transaction(function () use ($guardian, $validated) {
@@ -121,6 +139,11 @@ class AdminGuardianController extends Controller
             'student_id' => 'required|exists:estudiantes,id',
             'is_primary_contact' => 'required|boolean',
             'consent_accepted' => 'required|accepted',
+        ], [
+            'guardian_id.required' => 'Debe seleccionar un padre o tutor.',
+            'student_id.required' => 'Debe seleccionar un estudiante.',
+            'consent_accepted.required' => 'Debe marcar la aceptación del aviso de privacidad LFPDPPP.',
+            'consent_accepted.accepted' => 'Es obligatorio aceptar el consentimiento LFPDPPP para registrar la vinculación.',
         ]);
 
         $guardian = Tutor::findOrFail($validated['guardian_id']);

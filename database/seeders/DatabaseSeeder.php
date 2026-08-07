@@ -17,6 +17,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
+        // 0. Create SuperAdmin User (Full privileges on everything)
+        $superadmin = User::create([
+            'nombre' => 'Super',
+            'apellido_paterno' => 'Administrador',
+            'apellido_materno' => 'General',
+            'email' => 'superadmin@escuela.edu.mx',
+            'password' => Hash::make('password'),
+            'role' => 'superadmin',
+            'phone' => '5550009999',
+        ]);
+
         // 1. Create Admin User
         $admin = User::create([
             'nombre' => 'Administrador',
@@ -155,6 +166,6 @@ class DatabaseSeeder extends Seeder
             }
         }
 
-        AuditLog::log('WRITE', 'users', $admin->id, 'Seeder con materias y carga académica de bachillerato ejecutado');
+        AuditLog::log('WRITE', 'users', $superadmin->id, 'Seeder con superadmin, admin, docentes, materias y alumnos ejecutado');
     }
 }

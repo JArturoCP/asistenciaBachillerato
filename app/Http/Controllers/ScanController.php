@@ -22,11 +22,17 @@ class ScanController extends Controller
         $request->validate([
             'qr_code' => 'required|string',
             'scan_method' => 'required|in:qr_camera,qr_usb',
+        ], [
+            'qr_code.required' => 'El código QR de la credencial es obligatorio.',
+            'scan_method.required' => 'El método de escaneo es obligatorio.',
+            'scan_method.in' => 'El método de escaneo seleccionado no es válido.',
         ]);
 
         $qrCode = trim($request->qr_code);
-        $today = Carbon::today();
-        $now = Carbon::now();
+
+        // Enforce Mexican Local Time (America/Mexico_City)
+        $now = Carbon::now('America/Mexico_City');
+        $today = Carbon::today('America/Mexico_City');
 
         // 1. Find active student by UUID or matricula
         $student = Estudiante::with(['user', 'grupo', 'tutores.user'])
@@ -52,7 +58,7 @@ class ScanController extends Controller
 
         // Anti-duplicate / Debounce logic (5 minutes)
         if ($attendance && $attendance->hora_entrada) {
-            $checkInDateTime = Carbon::parse($attendance->fecha->format('Y-m-d') . ' ' . $attendance->hora_entrada);
+            $checkInDateTime = Carbon::parse($attendance->fecha->format('Y-m-d') . ' ' . $attendance->hora_entrada, 'America/Mexico_City');
             
             // If scanned again within 5 minutes of check-in, reject as accidental duplicate
             if ($checkInDateTime->diffInMinutes($now) < 5 && !$attendance->hora_salida) {
@@ -85,7 +91,7 @@ class ScanController extends Controller
                 return response()->json([
                     'status' => 'info',
                     'title' => 'Salida Registrada',
-                    'message' => "Salida escolar registrada correctamente para {$student->nombre_completo}.",
+                    'message' => "Salida escolar registrada correctamente para {$student->nombre_completo} a las {$now->format('H:i:s')} hrs.",
                     'student' => [
                         'name' => $student->nombre_completo,
                         'matricula' => $student->matricula,
@@ -120,7 +126,7 @@ class ScanController extends Controller
 
         // 3. Register Check-In (Entrada)
         // Late arrival threshold: 07:15:00 AM
-        $lateThreshold = Carbon::createFromTime(7, 15, 0);
+        $lateThreshold = Carbon::createFromTime(7, 15, 0, 'America/Mexico_City');
         $isLate = $now->greaterThan($lateThreshold);
         $attendanceStatus = $isLate ? 'retardo' : 'presente';
 

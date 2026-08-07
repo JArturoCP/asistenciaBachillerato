@@ -102,7 +102,7 @@
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditStudent-{{ $student->id }}" title="Editar Estudiante">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('admin.students.destroy', $student) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar al estudiante {{ $student->nombre_completo }}?');">
+                                <form action="{{ route('admin.students.destroy', $student) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar al estudiante {{ $student->nombre_completo }}?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Estudiante">
@@ -117,19 +117,31 @@
                                             <form action="{{ route('admin.students.update', $student) }}" method="POST" enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
+                                                <input type="hidden" name="form_modal_id" value="modalEditStudent-{{ $student->id }}">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Estudiante</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
+                                                    @if($errors->any() && old('form_modal_id') === 'modalEditStudent-' . $student->id)
+                                                        <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                                            <ul class="mb-0 mt-1 ps-3">
+                                                                @foreach($errors->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
+
                                                     <div class="row">
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label fw-semibold">Matrícula</label>
-                                                            <input type="text" name="matricula" class="form-control" value="{{ $student->matricula }}" required>
+                                                            <input type="text" name="matricula" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula', $student->matricula) }}" required>
                                                         </div>
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
-                                                            <input type="file" name="foto" class="form-control" accept="image/*">
+                                                            <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*">
                                                             @if($student->foto)
                                                                 <small class="text-success"><i class="bi bi-check-circle me-1"></i> Fotografía guardada previamente</small>
                                                             @endif
@@ -138,26 +150,26 @@
                                                     <div class="row">
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Nombre(s)</label>
-                                                            <input type="text" name="nombre" class="form-control" value="{{ $student->user->nombre }}" required>
+                                                            <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $student->user->nombre) }}" required>
                                                         </div>
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Apellido Paterno</label>
-                                                            <input type="text" name="apellido_paterno" class="form-control" value="{{ $student->user->apellido_paterno }}" required>
+                                                            <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno', $student->user->apellido_paterno) }}" required>
                                                         </div>
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Apellido Materno</label>
-                                                            <input type="text" name="apellido_materno" class="form-control" value="{{ $student->user->apellido_materno }}">
+                                                            <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno', $student->user->apellido_materno) }}">
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Fecha de Nacimiento</label>
-                                                        <input type="date" name="birth_date" class="form-control" value="{{ $student->fecha_nacimiento ? $student->fecha_nacimiento->format('Y-m-d') : '' }}">
+                                                        <input type="date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date', $student->fecha_nacimiento ? $student->fecha_nacimiento->format('Y-m-d') : '') }}">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Grupo Asignado</label>
-                                                        <select name="group_id" class="form-select" required>
+                                                        <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                                             @foreach($groups as $group)
-                                                                <option value="{{ $group->id }}" {{ $student->grupo_id == $group->id ? 'selected' : '' }}>
+                                                                <option value="{{ $group->id }}" {{ old('group_id', $student->grupo_id) == $group->id ? 'selected' : '' }}>
                                                                     Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
                                                                 </option>
                                                             @endforeach
@@ -165,9 +177,9 @@
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Estado del Estudiante</label>
-                                                        <select name="is_active" class="form-select" required>
-                                                            <option value="1" {{ $student->is_active ? 'selected' : '' }}>Activo</option>
-                                                            <option value="0" {{ !$student->is_active ? 'selected' : '' }}>Inactivo</option>
+                                                        <select name="is_active" class="form-select @error('is_active') is-invalid @enderror" required>
+                                                            <option value="1" {{ old('is_active', $student->is_active) ? 'selected' : '' }}>Activo</option>
+                                                            <option value="0" {{ !old('is_active', $student->is_active) ? 'selected' : '' }}>Inactivo</option>
                                                         </select>
                                                     </div>
                                                 </div>
@@ -203,45 +215,57 @@
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.students.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
+                    <input type="hidden" name="form_modal_id" value="modalCreateStudent">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold"><i class="bi bi-person-plus text-primary me-2"></i> Registrar Nuevo Estudiante</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @if($errors->any() && old('form_modal_id') === 'modalCreateStudent')
+                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                <ul class="mb-0 mt-1 ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Matrícula</label>
-                                <input type="text" name="matricula" class="form-control" placeholder="Ej. BAC-2026-001" required>
+                                <input type="text" name="matricula" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula') }}" placeholder="Ej. BAC-2026-001" required>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
-                                <input type="file" name="foto" class="form-control" accept="image/*">
+                                <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*">
                             </div>
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Nombre(s)</label>
-                                <input type="text" name="nombre" class="form-control" placeholder="Ej. Juan Manuel" required>
+                                <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre') }}" placeholder="Ej. Juan Manuel" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Pérez" required>
+                                <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno') }}" placeholder="Ej. Pérez" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Gómez">
+                                <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno') }}" placeholder="Ej. Gómez">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Fecha de Nacimiento</label>
-                            <input type="date" name="birth_date" class="form-control">
+                            <input type="date" name="birth_date" class="form-control @error('birth_date') is-invalid @enderror" value="{{ old('birth_date') }}">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Grupo Asignado</label>
-                            <select name="group_id" class="form-select" required>
+                            <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                 <option value="">-- Seleccionar Grupo --</option>
                                 @foreach($groups as $group)
-                                    <option value="{{ $group->id }}">Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})</option>
+                                    <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})</option>
                                 @endforeach
                             </select>
                         </div>

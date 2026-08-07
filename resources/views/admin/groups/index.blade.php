@@ -47,7 +47,7 @@
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGroup-{{ $group->id }}" title="Editar Grupo">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar este grupo?');">
+                                <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar el grupo {{ $group->codigo_grupo }}?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Grupo">
@@ -62,33 +62,45 @@
                                             <form action="{{ route('admin.groups.update', $group) }}" method="POST">
                                                 @csrf
                                                 @method('PUT')
+                                                <input type="hidden" name="form_modal_id" value="modalEditGroup-{{ $group->id }}">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Grupo {{ $group->codigo_grupo }}</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
+                                                    @if($errors->any() && old('form_modal_id') === 'modalEditGroup-' . $group->id)
+                                                        <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                                            <ul class="mb-0 mt-1 ps-3">
+                                                                @foreach($errors->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
+
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Código del Grupo</label>
-                                                        <input type="text" name="group_code" class="form-control" value="{{ $group->codigo_grupo }}" required>
+                                                        <input type="text" name="group_code" class="form-control @error('group_code') is-invalid @enderror" value="{{ old('group_code', $group->codigo_grupo) }}" required>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Grado / Semestre</label>
-                                                        <select name="grade" class="form-select" required>
-                                                            <option value="1" {{ $group->grado == 1 ? 'selected' : '' }}>1er Grado</option>
-                                                            <option value="2" {{ $group->grado == 2 ? 'selected' : '' }}>2do Grado</option>
-                                                            <option value="3" {{ $group->grado == 3 ? 'selected' : '' }}>3er Grado</option>
+                                                        <select name="grade" class="form-select @error('grade') is-invalid @enderror" required>
+                                                            <option value="1" {{ old('grade', $group->grado) == 1 ? 'selected' : '' }}>1er Grado</option>
+                                                            <option value="2" {{ old('grade', $group->grado) == 2 ? 'selected' : '' }}>2do Grado</option>
+                                                            <option value="3" {{ old('grade', $group->grado) == 3 ? 'selected' : '' }}>3er Grado</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Turno</label>
-                                                        <select name="shift" class="form-select" required>
-                                                            <option value="matutino" {{ $group->turno == 'matutino' ? 'selected' : '' }}>Matutino</option>
-                                                            <option value="vespertino" {{ $group->turno == 'vespertino' ? 'selected' : '' }}>Vespertino</option>
+                                                        <select name="shift" class="form-select @error('shift') is-invalid @enderror" required>
+                                                            <option value="matutino" {{ old('shift', $group->turno) == 'matutino' ? 'selected' : '' }}>Matutino</option>
+                                                            <option value="vespertino" {{ old('shift', $group->turno) == 'vespertino' ? 'selected' : '' }}>Vespertino</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Ciclo Escolar</label>
-                                                        <input type="text" name="school_year" class="form-control" value="{{ $group->ciclo_escolar }}" required>
+                                                        <input type="text" name="school_year" class="form-control @error('school_year') is-invalid @enderror" value="{{ old('school_year', $group->ciclo_escolar) }}" required>
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -119,33 +131,45 @@
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.groups.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="form_modal_id" value="modalCreateGroup">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold"><i class="bi bi-diagram-3 text-primary me-2"></i> Registrar Nuevo Grupo</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @if($errors->any() && old('form_modal_id') === 'modalCreateGroup')
+                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                <ul class="mb-0 mt-1 ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Código del Grupo</label>
-                            <input type="text" name="group_code" class="form-control" placeholder="Ej. 1A-MAT" required>
+                            <input type="text" name="group_code" class="form-control @error('group_code') is-invalid @enderror" value="{{ old('group_code') }}" placeholder="Ej. 1A-MAT" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Grado / Semestre</label>
-                            <select name="grade" class="form-select" required>
-                                <option value="1">1er Grado</option>
-                                <option value="2">2do Grado</option>
-                                <option value="3">3er Grado</option>
+                            <select name="grade" class="form-select @error('grade') is-invalid @enderror" required>
+                                <option value="1" {{ old('grade') == '1' ? 'selected' : '' }}>1er Grado</option>
+                                <option value="2" {{ old('grade') == '2' ? 'selected' : '' }}>2do Grado</option>
+                                <option value="3" {{ old('grade') == '3' ? 'selected' : '' }}>3er Grado</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Turno</label>
-                            <select name="shift" class="form-select" required>
-                                <option value="matutino">Matutino</option>
-                                <option value="vespertino">Vespertino</option>
+                            <select name="shift" class="form-select @error('shift') is-invalid @enderror" required>
+                                <option value="matutino" {{ old('shift') == 'matutino' ? 'selected' : '' }}>Matutino</option>
+                                <option value="vespertino" {{ old('shift') == 'vespertino' ? 'selected' : '' }}>Vespertino</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Ciclo Escolar</label>
-                            <input type="text" name="school_year" class="form-control" value="2026-2027" required>
+                            <input type="text" name="school_year" class="form-control @error('school_year') is-invalid @enderror" value="{{ old('school_year', '2026-2027') }}" required>
                         </div>
                     </div>
                     <div class="modal-footer">

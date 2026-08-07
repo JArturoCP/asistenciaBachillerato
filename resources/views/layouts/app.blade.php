@@ -16,6 +16,8 @@
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
         <!-- Bootstrap Icons -->
         <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+        <!-- SweetAlert2 CSS -->
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 
         <!-- Vite Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
@@ -63,16 +65,23 @@
             <!-- Page Content -->
             <main class="py-4">
                 <div class="container">
-                    @if(session('success'))
-                        <div class="alert alert-success alert-dismissible fade show card-custom mb-4" role="alert">
-                            <i class="bi bi-check-circle-fill me-2"></i> {{ session('success') }}
+
+                    {{-- Page-level error alerts --}}
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show card-custom mb-4" role="alert">
+                            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
 
-                    @if(session('error'))
+                    @if($errors->any() && !old('form_modal_id'))
                         <div class="alert alert-danger alert-dismissible fade show card-custom mb-4" role="alert">
-                            <i class="bi bi-exclamation-triangle-fill me-2"></i> {{ session('error') }}
+                            <div class="fw-bold mb-1"><i class="bi bi-exclamation-triangle-fill me-2"></i> Atención: Por favor corrija los siguientes errores:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
                             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                         </div>
                     @endif
@@ -84,5 +93,56 @@
 
         <!-- Bootstrap 5.3 JS Bundle -->
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- SweetAlert2 JS -->
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                // SweetAlert ONLY for success notifications
+                @if(session('success'))
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Operación Exitosa!',
+                        text: "{{ session('success') }}",
+                        timer: 3500,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                @endif
+
+                // Auto-reopen ONLY the specific modal that had validation errors
+                @if($errors->any() && old('form_modal_id'))
+                    const targetModalId = "{{ old('form_modal_id') }}";
+                    const modalEl = document.getElementById(targetModalId);
+                    if (modalEl) {
+                        const bsModal = new bootstrap.Modal(modalEl);
+                        bsModal.show();
+                    }
+                @endif
+            });
+
+            // SweetAlert ONLY for action confirmation (delete)
+            function confirmDelete(event, message = '¿Está seguro de eliminar este registro?') {
+                event.preventDefault();
+                const form = event.target.closest('form');
+                
+                Swal.fire({
+                    title: '¿Confirmar eliminación?',
+                    text: message,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#dc3545',
+                    cancelButtonColor: '#6c757d',
+                    confirmButtonText: '<i class="bi bi-trash-fill me-1"></i> Sí, eliminar',
+                    cancelButtonText: 'Cancelar'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        form.submit();
+                    }
+                });
+                return false;
+            }
+        </script>
     </body>
 </html>

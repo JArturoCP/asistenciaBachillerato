@@ -14,36 +14,39 @@ Route::get('/', function () {
     return redirect()->route('login');
 });
 
+// Main Admin Dashboard (Restricted to Admin and Superadmin; throws 403 for Parents and Teachers)
 Route::get('/dashboard', function () {
     return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'role:admin,superadmin'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Kiosk Scanner Station Routes
-    Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
-    Route::post('/scan/process', [ScanController::class, 'process'])->name('scan.process');
+    // Kiosk Scanner Station Routes (Visible to Superadmin, Admin & Teacher; restricted for Parent)
+    Route::middleware(['role:superadmin,admin,teacher'])->group(function () {
+        Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
+        Route::post('/scan/process', [ScanController::class, 'process'])->name('scan.process');
+    });
 
-    // Teacher Panel Routes (Roles: teacher, admin)
-    Route::middleware(['role:teacher,admin'])->prefix('teacher')->name('teacher.')->group(function () {
+    // Teacher Panel Routes (Roles: teacher, admin, superadmin)
+    Route::middleware(['role:teacher,admin,superadmin'])->prefix('teacher')->name('teacher.')->group(function () {
         Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
         Route::post('attendance/update', [TeacherAttendanceController::class, 'updateStatus'])->name('attendance.update');
         Route::get('attendance/export', [TeacherAttendanceController::class, 'exportCsv'])->name('attendance.export');
     });
 
-    // Parent Portal Routes (Roles: parent, admin)
-    Route::middleware(['role:parent,admin'])->prefix('parent')->name('parent.')->group(function () {
+    // Parent Portal Routes (Roles: parent, admin, superadmin)
+    Route::middleware(['role:parent,admin,superadmin'])->prefix('parent')->name('parent.')->group(function () {
         Route::get('dashboard', [ParentPortalController::class, 'index'])->name('dashboard');
         Route::post('alerts/update', [ParentPortalController::class, 'updateAlerts'])->name('alerts.update');
         Route::post('arco/submit', [ParentPortalController::class, 'submitArcoRequest'])->name('arco.submit');
     });
 });
 
-// Admin Routes (RBAC Role: admin)
-Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
+// Admin Routes (RBAC Roles: admin, superadmin)
+Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
     // Groups CRUD
     Route::resource('groups', AdminGroupController::class)->except(['create', 'edit', 'show']);
 

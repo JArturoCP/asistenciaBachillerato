@@ -24,6 +24,13 @@ class AdminGroupController extends Controller
             'grade' => 'required|string',
             'shift' => 'required|in:matutino,vespertino',
             'school_year' => 'required|string',
+        ], [
+            'group_code.required' => 'El código del grupo es obligatorio.',
+            'group_code.unique' => 'El código del grupo ingresado ya existe.',
+            'grade.required' => 'El grado o semestre es obligatorio.',
+            'shift.required' => 'El turno es obligatorio.',
+            'shift.in' => 'El turno debe ser matutino o vespertino.',
+            'school_year.required' => 'El ciclo escolar es obligatorio.',
         ]);
 
         $group = Grupo::create([
@@ -45,6 +52,13 @@ class AdminGroupController extends Controller
             'grade' => 'required|string',
             'shift' => 'required|in:matutino,vespertino',
             'school_year' => 'required|string',
+        ], [
+            'group_code.required' => 'El código del grupo es obligatorio.',
+            'group_code.unique' => 'El código del grupo ingresado ya existe.',
+            'grade.required' => 'El grado o semestre es obligatorio.',
+            'shift.required' => 'El turno es obligatorio.',
+            'shift.in' => 'El turno debe ser matutino o vespertino.',
+            'school_year.required' => 'El ciclo escolar es obligatorio.',
         ]);
 
         $group->update([

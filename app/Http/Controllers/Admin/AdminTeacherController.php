@@ -34,8 +34,17 @@ class AdminTeacherController extends Controller
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
-            'phone' => 'nullable|string|max:20',
+            'phone' => 'nullable|string|digits:10',
             'password' => 'required|string|min:8',
+        ], [
+            'nombre.required' => 'El nombre del docente es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno del docente es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo válida.',
+            'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
+            'password.required' => 'La contraseña inicial es obligatoria.',
+            'password.min' => 'La contraseña debe contener al menos 8 caracteres.',
+            'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
         ]);
 
         $teacher = User::create([
@@ -62,6 +71,13 @@ class AdminTeacherController extends Controller
             'email' => 'required|email|unique:users,email,' . $teacher->id,
             'phone' => 'nullable|string|max:20',
             'password' => 'nullable|string|min:8',
+        ], [
+            'nombre.required' => 'El nombre del docente es obligatorio.',
+            'apellido_paterno.required' => 'El apellido paterno del docente es obligatorio.',
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo válida.',
+            'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
+            'password.min' => 'La nueva contraseña debe contener al menos 8 caracteres.',
         ]);
 
         $updateData = [
@@ -99,6 +115,13 @@ class AdminTeacherController extends Controller
             'clave' => 'required|string|max:20|unique:materias,clave',
             'nombre' => 'required|string|max:150',
             'semestre' => 'required|integer|min:1|max:6',
+        ], [
+            'clave.required' => 'La clave de la materia es obligatoria.',
+            'clave.unique' => 'La clave de materia ya existe en el catálogo.',
+            'nombre.required' => 'El nombre de la asignatura es obligatorio.',
+            'semestre.required' => 'El semestre es obligatorio.',
+            'semestre.min' => 'El semestre debe ser al menos 1.',
+            'semestre.max' => 'El semestre máximo es 6.',
         ]);
 
         $materia = Materia::create($validated);
@@ -118,6 +141,13 @@ class AdminTeacherController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'aula' => 'nullable|string|max:50',
+        ], [
+            'teacher_id.required' => 'Debe seleccionar un docente.',
+            'materia_id.required' => 'Debe seleccionar una asignatura.',
+            'group_id.required' => 'Debe seleccionar un grupo.',
+            'dia_semana.required' => 'El día de la semana es obligatorio.',
+            'start_time.required' => 'La hora de inicio es obligatoria.',
+            'end_time.required' => 'La hora de fin es obligatoria.',
         ]);
 
         $assignment = DocenteGrupo::create([
@@ -145,6 +175,12 @@ class AdminTeacherController extends Controller
             'start_time' => 'required',
             'end_time' => 'required',
             'aula' => 'nullable|string|max:50',
+        ], [
+            'materia_id.required' => 'Debe seleccionar una asignatura.',
+            'group_id.required' => 'Debe seleccionar un grupo.',
+            'dia_semana.required' => 'El día de la semana es obligatorio.',
+            'start_time.required' => 'La hora de inicio es obligatoria.',
+            'end_time.required' => 'La hora de fin es obligatoria.',
         ]);
 
         $teacherGroup->update([

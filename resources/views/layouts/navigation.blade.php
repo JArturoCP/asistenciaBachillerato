@@ -7,29 +7,47 @@
             <span class="fs-5">ControlAsistencia<span class="text-warning">.Bachillerato</span></span>
         </a>
 
-        <!-- Navigation Links (Always visible flex container) -->
-        <div class="d-flex align-items-center flex-wrap gap-3 my-1">
-            <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('dashboard') ? 'bg-primary fw-bold text-white' : 'hover-opacity' }}" href="{{ route('dashboard') }}">
-                <i class="bi bi-speedometer2 me-1"></i> Dashboard
-            </a>
+        @php
+            $u = Auth::user();
+            $isSuper = $u?->isSuperAdmin();
+            $isAdmin = $u?->role === 'admin';
+            $isTeacher = $u?->role === 'teacher' || $u?->role === 'docente';
+            $isParent = $u?->role === 'parent' || $u?->role === 'tutor';
+        @endphp
 
-            <a class="nav-link text-warning fw-bold px-2 py-1 rounded border border-warning {{ request()->routeIs('scan.index') ? 'bg-warning text-dark' : '' }}" href="{{ route('scan.index') }}">
-                <i class="bi bi-qr-code-scan me-1"></i> Escaneo Kiosco
-            </a>
+        <!-- Navigation Links -->
+        <div class="d-flex align-items-center flex-wrap gap-2 my-1">
+            
+            {{-- Dashboard (Superadmin & Admin) --}}
+            @if($isSuper || $isAdmin)
+                <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('dashboard') ? 'bg-primary fw-bold text-white' : 'hover-opacity' }}" href="{{ route('dashboard') }}">
+                    <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+            @endif
 
-            @if(Auth::check() && (Auth::user()->isTeacher() || Auth::user()->isAdmin()))
+            {{-- Escaneo Kiosco (Visible to everyone EXCEPT Parents) --}}
+            @if(!$isParent)
+                <a class="nav-link text-warning fw-bold px-2 py-1 rounded border border-warning {{ request()->routeIs('scan.index') ? 'bg-warning text-dark' : '' }}" href="{{ route('scan.index') }}">
+                    <i class="bi bi-qr-code-scan me-1"></i> Escaneo Kiosco
+                </a>
+            @endif
+
+            {{-- Reporte Docente (Teacher & Superadmin) --}}
+            @if($isTeacher || $isSuper)
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('teacher.attendance.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('teacher.attendance.index') }}">
                     <i class="bi bi-journal-check me-1"></i> Reporte Docente
                 </a>
             @endif
 
-            @if(Auth::check() && (Auth::user()->isParent() || Auth::user()->isAdmin()))
+            {{-- Portal Padres (Parent & Superadmin) --}}
+            @if($isParent || $isSuper)
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('parent.dashboard') ? 'bg-primary fw-bold' : '' }}" href="{{ route('parent.dashboard') }}">
                     <i class="bi bi-house-heart me-1"></i> Portal Padres
                 </a>
             @endif
 
-            @if(Auth::check() && Auth::user()->isAdmin())
+            {{-- Admin Modules (Dashboard, Grupos, Estudiantes, Docentes, Padres y Consentimientos) --}}
+            @if($isAdmin || $isSuper)
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.groups.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.groups.index') }}">
                     <i class="bi bi-diagram-3 me-1"></i> Grupos
                 </a>
@@ -45,11 +63,13 @@
             @endif
         </div>
 
-        <!-- User Info & LOGOUT BUTTON (ALWAYS VISIBLE WITH HIGH CONTRAST RED BUTTON) -->
+        <!-- User Info & LOGOUT BUTTON -->
         <div class="d-flex align-items-center gap-3">
             <div class="text-end d-none d-sm-block">
                 <div class="fw-bold text-white small">{{ Auth::user()->name }}</div>
-                <span class="badge bg-danger text-white border border-light">ROL: {{ strtoupper(Auth::user()->role) }}</span>
+                <span class="badge {{ $isSuper ? 'bg-warning text-dark' : 'bg-danger text-white' }} border border-light">
+                    ROL: {{ strtoupper(Auth::user()->role) }}
+                </span>
             </div>
 
             <form method="POST" action="{{ route('logout') }}" class="m-0">

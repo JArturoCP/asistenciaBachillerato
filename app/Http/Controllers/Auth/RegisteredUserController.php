@@ -37,6 +37,14 @@ class RegisteredUserController extends Controller
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
             'role' => ['nullable', 'in:parent,teacher,admin'],
             'phone' => ['nullable', 'string', 'max:20'],
+        ], [
+            'email.required' => 'El correo electrónico es obligatorio.',
+            'email.email' => 'Ingrese una dirección de correo electrónico válida.',
+            'email.unique' => 'Este correo electrónico ya se encuentra registrado.',
+            'password.required' => 'La contraseña es obligatoria.',
+            'password.confirmed' => 'La confirmación de la contraseña no coincide.',
+            'password.min' => 'La contraseña debe contener al menos :min caracteres.',
+            'role.in' => 'El rol seleccionado no es válido.',
         ]);
 
         if ($request->filled('nombre') && $request->filled('apellido_paterno')) {
@@ -77,6 +85,14 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        return redirect(route('dashboard', absolute: false));
+        if ($user->isParent()) {
+            return redirect()->route('parent.dashboard');
+        }
+
+        if ($user->isTeacher() && !$user->isAdmin()) {
+            return redirect()->route('teacher.attendance.index');
+        }
+
+        return redirect()->route('dashboard');
     }
 }

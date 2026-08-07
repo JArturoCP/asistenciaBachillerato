@@ -16,7 +16,7 @@ return new class extends Migration
             $table->string('nombre')->nullable()->after('id');
             $table->string('apellido_paterno')->nullable()->after('nombre');
             $table->string('apellido_materno')->nullable()->after('apellido_paterno');
-            $table->enum('role', ['admin', 'teacher', 'parent', 'student'])->default('admin')->after('email');
+            $table->string('role', 30)->default('admin')->after('email');
             $table->string('phone')->nullable()->after('role');
             $table->softDeletes();
         });

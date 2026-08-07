@@ -20,6 +20,16 @@ class PhaseOneTest extends TestCase
         $this->seed();
     }
 
+    public function test_superadmin_can_access_all_modules()
+    {
+        $superadmin = User::where('role', 'superadmin')->first();
+
+        $this->actingAs($superadmin)->get('/dashboard')->assertStatus(200);
+        $this->actingAs($superadmin)->get(route('admin.groups.index'))->assertStatus(200);
+        $this->actingAs($superadmin)->get(route('teacher.attendance.index'))->assertStatus(200);
+        $this->actingAs($superadmin)->get(route('parent.dashboard'))->assertStatus(200);
+    }
+
     public function test_admin_can_access_dashboard()
     {
         $admin = User::where('role', 'admin')->first();
@@ -27,6 +37,50 @@ class PhaseOneTest extends TestCase
         $response = $this->actingAs($admin)->get('/dashboard');
         $response->assertStatus(200);
         $response->assertSee('Panel de Control Principal');
+    }
+
+    public function test_parent_cannot_access_dashboard_and_receives_403()
+    {
+        $parent = User::where('role', 'parent')->first();
+
+        $response = $this->actingAs($parent)->get('/dashboard');
+        $response->assertStatus(403);
+    }
+
+    public function test_teacher_cannot_access_dashboard_and_receives_403()
+    {
+        $teacher = User::where('role', 'teacher')->first();
+
+        $response = $this->actingAs($teacher)->get('/dashboard');
+        $response->assertStatus(403);
+    }
+
+    public function test_role_based_login_redirections()
+    {
+        // 1. Parent login redirects to /parent/dashboard
+        $responseParent = $this->post('/login', [
+            'email' => 'tutor1@gmail.com',
+            'password' => 'password',
+        ]);
+        $responseParent->assertRedirect(route('parent.dashboard'));
+
+        $this->post('/logout');
+
+        // 2. Teacher login redirects to /teacher/attendance
+        $responseTeacher = $this->post('/login', [
+            'email' => 'docente1@escuela.edu.mx',
+            'password' => 'password',
+        ]);
+        $responseTeacher->assertRedirect(route('teacher.attendance.index'));
+
+        $this->post('/logout');
+
+        // 3. Admin login redirects to /dashboard
+        $responseAdmin = $this->post('/login', [
+            'email' => 'admin@escuela.edu.mx',
+            'password' => 'password',
+        ]);
+        $responseAdmin->assertRedirect(route('dashboard'));
     }
 
     public function test_admin_can_create_group()

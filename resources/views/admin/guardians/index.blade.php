@@ -85,7 +85,7 @@
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGuardian-{{ $guardian->id }}" title="Editar Tutor">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                <form action="{{ route('admin.guardians.destroyGuardian', $guardian) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar a este Padre/Tutor?');">
+                                <form action="{{ route('admin.guardians.destroyGuardian', $guardian) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar a este Padre/Tutor?');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Tutor">
@@ -100,44 +100,56 @@
                                             <form action="{{ route('admin.guardians.updateGuardian', $guardian) }}" method="POST">
                                                 @csrf
                                                 @method('PUT')
+                                                <input type="hidden" name="form_modal_id" value="modalEditGuardian-{{ $guardian->id }}">
                                                 <div class="modal-header">
                                                     <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Padre / Tutor</h5>
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
+                                                    @if($errors->any() && old('form_modal_id') === 'modalEditGuardian-' . $guardian->id)
+                                                        <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                                            <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                                            <ul class="mb-0 mt-1 ps-3">
+                                                                @foreach($errors->all() as $error)
+                                                                    <li>{{ $error }}</li>
+                                                                @endforeach
+                                                            </ul>
+                                                        </div>
+                                                    @endif
+
                                                     <div class="row">
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Nombre(s)</label>
-                                                            <input type="text" name="nombre" class="form-control" value="{{ $guardian->user->nombre }}" required>
+                                                            <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre', $guardian->user->nombre) }}" required>
                                                         </div>
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Apellido Paterno</label>
-                                                            <input type="text" name="apellido_paterno" class="form-control" value="{{ $guardian->user->apellido_paterno }}" required>
+                                                            <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno', $guardian->user->apellido_paterno) }}" required>
                                                         </div>
                                                         <div class="col-md-4 mb-3">
                                                             <label class="form-label fw-semibold">Apellido Materno</label>
-                                                            <input type="text" name="apellido_materno" class="form-control" value="{{ $guardian->user->apellido_materno }}">
+                                                            <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno', $guardian->user->apellido_materno) }}">
                                                         </div>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Correo Electrónico (Acceso Portal y Alertas)</label>
-                                                        <input type="email" name="email" class="form-control" value="{{ $guardian->user->email }}" required>
+                                                        <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email', $guardian->user->email) }}" required>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Parentesco con el Estudiante</label>
-                                                        <select name="relationship" class="form-select" required>
-                                                            <option value="padre" {{ $guardian->parentesco == 'padre' ? 'selected' : '' }}>Padre</option>
-                                                            <option value="madre" {{ $guardian->parentesco == 'madre' ? 'selected' : '' }}>Madre</option>
-                                                            <option value="tutor_legal" {{ $guardian->parentesco == 'tutor_legal' ? 'selected' : '' }}>Tutor Legal</option>
+                                                        <select name="relationship" class="form-select @error('relationship') is-invalid @enderror" required>
+                                                            <option value="padre" {{ old('relationship', $guardian->parentesco) == 'padre' ? 'selected' : '' }}>Padre</option>
+                                                            <option value="madre" {{ old('relationship', $guardian->parentesco) == 'madre' ? 'selected' : '' }}>Madre</option>
+                                                            <option value="tutor_legal" {{ old('relationship', $guardian->parentesco) == 'tutor_legal' ? 'selected' : '' }}>Tutor Legal</option>
                                                         </select>
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Teléfono Celular</label>
-                                                        <input type="text" name="phone" class="form-control" value="{{ $guardian->telefono }}">
+                                                        <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone', $guardian->telefono) }}">
                                                     </div>
                                                     <div class="mb-3">
                                                         <label class="form-label fw-semibold">Nueva Contraseña (Opcional)</label>
-                                                        <input type="password" name="password" class="form-control" placeholder="Dejar en blanco para no cambiar">
+                                                        <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" placeholder="Dejar en blanco para no cambiar">
                                                     </div>
                                                 </div>
                                                 <div class="modal-footer">
@@ -168,44 +180,56 @@
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.guardians.store') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="form_modal_id" value="modalCreateGuardian">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold"><i class="bi bi-person-plus text-primary me-2"></i> Registrar Padre / Tutor</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @if($errors->any() && old('form_modal_id') === 'modalCreateGuardian')
+                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                <ul class="mb-0 mt-1 ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Nombre(s)</label>
-                                <input type="text" name="nombre" class="form-control" placeholder="Ej. Carlos" required>
+                                <input type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre') }}" placeholder="Ej. Carlos" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Apellido Paterno</label>
-                                <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Pérez" required>
+                                <input type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno') }}" placeholder="Ej. Pérez" required>
                             </div>
                             <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Apellido Materno</label>
-                                <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Hernández">
+                                <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno') }}" placeholder="Ej. Hernández">
                             </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Correo Electrónico (Acceso Portal y Alertas)</label>
-                            <input type="email" name="email" class="form-control" placeholder="tutor@gmail.com" required>
+                            <input type="email" name="email" class="form-control @error('email') is-invalid @enderror" value="{{ old('email') }}" placeholder="tutor@gmail.com" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Parentesco con el Estudiante</label>
-                            <select name="relationship" class="form-select" required>
-                                <option value="padre">Padre</option>
-                                <option value="madre">Madre</option>
-                                <option value="tutor_legal">Tutor Legal</option>
+                            <select name="relationship" class="form-select @error('relationship') is-invalid @enderror" required>
+                                <option value="padre" {{ old('relationship') == 'padre' ? 'selected' : '' }}>Padre</option>
+                                <option value="madre" {{ old('relationship') == 'madre' ? 'selected' : '' }}>Madre</option>
+                                <option value="tutor_legal" {{ old('relationship') == 'tutor_legal' ? 'selected' : '' }}>Tutor Legal</option>
                             </select>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Teléfono Celular</label>
-                            <input type="text" name="phone" class="form-control" placeholder="10 dígitos">
+                            <input type="text" name="phone" class="form-control @error('phone') is-invalid @enderror" value="{{ old('phone') }}" placeholder="10 dígitos">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Contraseña Inicial</label>
-                            <input type="password" name="password" class="form-control" value="password" required>
+                            <input type="password" name="password" class="form-control @error('password') is-invalid @enderror" value="password" required>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -223,27 +247,39 @@
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.guardians.linkStudent') }}" method="POST">
                     @csrf
+                    <input type="hidden" name="form_modal_id" value="modalLinkStudent">
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold"><i class="bi bi-shield-check text-info me-2"></i> Vinculación & Registro de Consentimiento LFPDPPP</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
+                        @if($errors->any() && old('form_modal_id') === 'modalLinkStudent')
+                            <div class="alert alert-danger alert-dismissible fade show small mb-3" role="alert">
+                                <i class="bi bi-exclamation-triangle-fill me-1"></i> <strong>Verifique los siguientes errores:</strong>
+                                <ul class="mb-0 mt-1 ps-3">
+                                    @foreach($errors->all() as $error)
+                                        <li>{{ $error }}</li>
+                                    @endforeach
+                                </ul>
+                            </div>
+                        @endif
+
                         <div class="row">
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Padre / Tutor</label>
-                                <select name="guardian_id" class="form-select" required>
+                                <select name="guardian_id" class="form-select @error('guardian_id') is-invalid @enderror" required>
                                     <option value="">-- Seleccionar Tutor --</option>
                                     @foreach($guardians as $guardian)
-                                        <option value="{{ $guardian->id }}">{{ $guardian->user->nombre_completo }} ({{ $guardian->user->email }})</option>
+                                        <option value="{{ $guardian->id }}" {{ old('guardian_id') == $guardian->id ? 'selected' : '' }}>{{ $guardian->user->nombre_completo }} ({{ $guardian->user->email }})</option>
                                     @endforeach
                                 </select>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Estudiante Representado</label>
-                                <select name="student_id" class="form-select" required>
+                                <select name="student_id" class="form-select @error('student_id') is-invalid @enderror" required>
                                     <option value="">-- Seleccionar Alumno --</option>
                                     @foreach($students as $student)
-                                        <option value="{{ $student->id }}">{{ $student->nombre_completo }} ({{ $student->grupo->codigo_grupo }})</option>
+                                        <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>{{ $student->nombre_completo }} ({{ $student->grupo->codigo_grupo }})</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -251,15 +287,15 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Tipo de Contacto</label>
-                            <select name="is_primary_contact" class="form-select" required>
-                                <option value="1">Contacto Principal de Emergencia/Notificación</option>
-                                <option value="0">Contacto Secundario</option>
+                            <select name="is_primary_contact" class="form-select @error('is_primary_contact') is-invalid @enderror" required>
+                                <option value="1" {{ old('is_primary_contact') == '1' ? 'selected' : '' }}>Contacto Principal de Emergencia/Notificación</option>
+                                <option value="0" {{ old('is_primary_contact') == '0' ? 'selected' : '' }}>Contacto Secundario</option>
                             </select>
                         </div>
 
                         <div class="p-3 bg-light border rounded">
                             <div class="form-check">
-                                <input class="form-check-input" type="checkbox" name="consent_accepted" id="consentCheck" value="1" required>
+                                <input class="form-check-input @error('consent_accepted') is-invalid @enderror" type="checkbox" name="consent_accepted" id="consentCheck" value="1" required>
                                 <label class="form-check-label fw-semibold text-dark" for="consentCheck">
                                     El tutor otorga su consentimiento expreso e informado para el tratamiento de datos personales de su representado menor de edad conforme al <a href="#" onclick="alert('Aviso de Privacidad conforme a la LFPDPPP registrado.'); return false;">Aviso de Privacidad LFPDPPP</a> de la institución.
                                 </label>
