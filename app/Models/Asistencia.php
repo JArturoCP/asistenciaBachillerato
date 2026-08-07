@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Asistencia extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'asistencias';
 
@@ -34,13 +35,11 @@ class Asistencia extends Model
         return $this->belongsTo(Estudiante::class, 'estudiante_id');
     }
 
-    // Alias for backward compatibility
     public function student(): BelongsTo
     {
         return $this->estudiante();
     }
 
-    // Accessors for backward compatibility
     public function getCheckInTimeAttribute()
     {
         return $this->hora_entrada;

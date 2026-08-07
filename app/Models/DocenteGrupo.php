@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class DocenteGrupo extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'docente_grupo';
 
@@ -37,14 +38,8 @@ class DocenteGrupo extends Model
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
 
-    // Accessor for backward compatibility
-    public function getMateriaAttribute()
-    {
-        return $this->materia?->nombre ?? 'Sin Asignatura';
-    }
-
     public function getSubjectNameAttribute()
     {
-        return $this->materia_attribute;
+        return $this->materia?->nombre ?? 'Sin Asignatura';
     }
 }

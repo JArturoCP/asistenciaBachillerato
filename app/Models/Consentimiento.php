@@ -4,11 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Consentimiento extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'consentimientos';
 
@@ -41,7 +42,6 @@ class Consentimiento extends Model
         return $this->belongsTo(Estudiante::class, 'estudiante_id');
     }
 
-    // Accessor for backward compatibility
     public function getGrantedAtAttribute()
     {
         return $this->fecha_otorgado;

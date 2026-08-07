@@ -27,23 +27,20 @@ class AdminGuardianController extends Controller
     public function storeGuardian(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'relationship' => 'required|in:padre,madre,tutor_legal',
             'password' => 'required|string|min:8',
         ]);
 
-        $nameParts = explode(' ', trim($validated['name']), 3);
-        $nombre = $nameParts[0];
-        $apellidoPaterno = $nameParts[1] ?? '';
-        $apellidoMaterno = $nameParts[2] ?? null;
-
-        DB::transaction(function () use ($validated, $nombre, $apellidoPaterno, $apellidoMaterno, &$guardian) {
+        DB::transaction(function () use ($validated, &$guardian) {
             $user = User::create([
-                'nombre' => $nombre,
-                'apellido_paterno' => $apellidoPaterno,
-                'apellido_materno' => $apellidoMaterno,
+                'nombre' => $validated['nombre'],
+                'apellido_paterno' => $validated['apellido_paterno'],
+                'apellido_materno' => $validated['apellido_materno'] ?? null,
                 'email' => $validated['email'],
                 'phone' => $validated['phone'],
                 'password' => Hash::make($validated['password']),
@@ -59,9 +56,62 @@ class AdminGuardianController extends Controller
             ]);
         });
 
-        AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor/Padre registrado: {$validated['name']}");
+        AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor/Padre registrado: {$guardian->user->nombre_completo}");
 
         return redirect()->route('admin.guardians.index')->with('success', "Padre/Tutor registrado exitosamente.");
+    }
+
+    public function updateGuardian(Request $request, Tutor $guardian)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
+            'email' => 'required|email|unique:users,email,' . $guardian->user_id,
+            'phone' => 'nullable|string|max:20',
+            'relationship' => 'required|in:padre,madre,tutor_legal',
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        DB::transaction(function () use ($guardian, $validated) {
+            $userData = [
+                'nombre' => $validated['nombre'],
+                'apellido_paterno' => $validated['apellido_paterno'],
+                'apellido_materno' => $validated['apellido_materno'] ?? null,
+                'email' => $validated['email'],
+                'phone' => $validated['phone'],
+            ];
+
+            if (!empty($validated['password'])) {
+                $userData['password'] = Hash::make($validated['password']);
+            }
+
+            $guardian->user->update($userData);
+
+            $guardian->update([
+                'parentesco' => $validated['relationship'],
+                'telefono' => $validated['phone'],
+                'correo_notificaciones' => $validated['email'],
+            ]);
+        });
+
+        AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor/Padre actualizado: {$guardian->user->nombre_completo}");
+
+        return redirect()->route('admin.guardians.index')->with('success', "Datos del Padre/Tutor actualizados correctamente.");
+    }
+
+    public function destroyGuardian(Tutor $guardian)
+    {
+        $name = $guardian->user->nombre_completo;
+        $user = $guardian->user;
+        $guardian->delete();
+        if ($user) {
+            $user->delete();
+        }
+
+        AuditLog::log('WRITE', 'tutores', null, "Tutor eliminado (Soft Delete): {$name}");
+
+        return redirect()->route('admin.guardians.index')->with('success', "Padre/Tutor {$name} eliminado del sistema.");
     }
 
     public function linkStudent(Request $request)

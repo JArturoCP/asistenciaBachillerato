@@ -40,6 +40,7 @@
                         <th>Teléfono</th>
                         <th>Hijo(s) Representado(s)</th>
                         <th>Estado Consentimiento LFPDPPP</th>
+                        <th class="text-end">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -80,10 +81,78 @@
                                     </span>
                                 @endif
                             </td>
+                            <td class="text-end">
+                                <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGuardian-{{ $guardian->id }}" title="Editar Tutor">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form action="{{ route('admin.guardians.destroyGuardian', $guardian) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar a este Padre/Tutor?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Tutor">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Modal Edit Guardian -->
+                                <div class="modal fade text-start" id="modalEditGuardian-{{ $guardian->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content card-custom">
+                                            <form action="{{ route('admin.guardians.updateGuardian', $guardian) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Padre / Tutor</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Nombre(s)</label>
+                                                            <input type="text" name="nombre" class="form-control" value="{{ $guardian->user->nombre }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Paterno</label>
+                                                            <input type="text" name="apellido_paterno" class="form-control" value="{{ $guardian->user->apellido_paterno }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Materno</label>
+                                                            <input type="text" name="apellido_materno" class="form-control" value="{{ $guardian->user->apellido_materno }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Correo Electrónico (Acceso Portal y Alertas)</label>
+                                                        <input type="email" name="email" class="form-control" value="{{ $guardian->user->email }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Parentesco con el Estudiante</label>
+                                                        <select name="relationship" class="form-select" required>
+                                                            <option value="padre" {{ $guardian->parentesco == 'padre' ? 'selected' : '' }}>Padre</option>
+                                                            <option value="madre" {{ $guardian->parentesco == 'madre' ? 'selected' : '' }}>Madre</option>
+                                                            <option value="tutor_legal" {{ $guardian->parentesco == 'tutor_legal' ? 'selected' : '' }}>Tutor Legal</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Teléfono Celular</label>
+                                                        <input type="text" name="phone" class="form-control" value="{{ $guardian->telefono }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Nueva Contraseña (Opcional)</label>
+                                                        <input type="password" name="password" class="form-control" placeholder="Dejar en blanco para no cambiar">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Actualizar Tutor</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="text-center py-4 text-muted">
+                            <td colspan="7" class="text-center py-4 text-muted">
                                 <i class="bi bi-shield-x fs-3 d-block mb-2"></i> No se han registrado padres o tutores aún.
                             </td>
                         </tr>
@@ -95,7 +164,7 @@
 
     <!-- Modal Create Guardian -->
     <div class="modal fade" id="modalCreateGuardian" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.guardians.store') }}" method="POST">
                     @csrf
@@ -104,9 +173,19 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nombre Completo del Tutor (Nombre Paterno Materno)</label>
-                            <input type="text" name="name" class="form-control" placeholder="Ej. Carlos Pérez Hernández" required>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Nombre(s)</label>
+                                <input type="text" name="nombre" class="form-control" placeholder="Ej. Carlos" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Paterno</label>
+                                <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Pérez" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Materno</label>
+                                <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Hernández">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Correo Electrónico (Acceso Portal y Alertas)</label>

@@ -18,12 +18,14 @@ return new class extends Migration
             $table->string('apellido_materno')->nullable()->after('apellido_paterno');
             $table->enum('role', ['admin', 'teacher', 'parent', 'student'])->default('admin')->after('email');
             $table->string('phone')->nullable()->after('role');
+            $table->softDeletes();
         });
     }
 
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
+            $table->dropSoftDeletes();
             $table->dropColumn(['nombre', 'apellido_paterno', 'apellido_materno', 'role', 'phone']);
         });
     }

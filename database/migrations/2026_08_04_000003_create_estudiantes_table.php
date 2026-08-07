@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('fecha_nacimiento')->nullable();
             $table->foreignId('grupo_id')->constrained('grupos')->onDelete('cascade');
             $table->boolean('is_active')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
     }

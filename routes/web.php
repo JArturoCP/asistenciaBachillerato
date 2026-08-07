@@ -51,16 +51,21 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::resource('students', AdminStudentController::class)->except(['create', 'edit', 'show']);
     Route::get('students/{student}/credential', [AdminStudentController::class, 'showCredential'])->name('students.credential');
 
-    // Teachers Management & Assignments
+    // Teachers Management & Assignments CRUD
     Route::get('teachers', [AdminTeacherController::class, 'index'])->name('teachers.index');
     Route::post('teachers/store', [AdminTeacherController::class, 'storeTeacher'])->name('teachers.store');
+    Route::put('teachers/{teacher}', [AdminTeacherController::class, 'updateTeacher'])->name('teachers.updateTeacher');
+    Route::delete('teachers/{teacher}', [AdminTeacherController::class, 'destroyTeacher'])->name('teachers.destroyTeacher');
     Route::post('teachers/materias', [AdminTeacherController::class, 'storeMateria'])->name('teachers.storeMateria');
     Route::post('teachers/assign', [AdminTeacherController::class, 'assignGroup'])->name('teachers.assignGroup');
+    Route::put('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'updateAssignment'])->name('teachers.updateAssignment');
     Route::delete('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'removeAssignment'])->name('teachers.removeAssignment');
 
-    // Guardians Management & LFPDPPP Consent
+    // Guardians Management & LFPDPPP Consent CRUD
     Route::get('guardians', [AdminGuardianController::class, 'index'])->name('guardians.index');
     Route::post('guardians/store', [AdminGuardianController::class, 'storeGuardian'])->name('guardians.store');
+    Route::put('guardians/{guardian}', [AdminGuardianController::class, 'updateGuardian'])->name('guardians.updateGuardian');
+    Route::delete('guardians/{guardian}', [AdminGuardianController::class, 'destroyGuardian'])->name('guardians.destroyGuardian');
     Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
 });
 

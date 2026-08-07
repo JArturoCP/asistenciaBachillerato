@@ -15,6 +15,7 @@ return new class extends Migration
             $table->string('telefono')->nullable();
             $table->string('correo_notificaciones')->nullable();
             $table->boolean('alertas_correo_activadas')->default(true);
+            $table->softDeletes();
             $table->timestamps();
         });
 

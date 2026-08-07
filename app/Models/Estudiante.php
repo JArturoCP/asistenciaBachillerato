@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,7 +12,7 @@ use Illuminate\Support\Str;
 
 class Estudiante extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'estudiantes';
 
@@ -61,7 +62,6 @@ class Estudiante extends Model
         return $this->belongsTo(Grupo::class, 'grupo_id');
     }
 
-    // Alias for backward compatibility
     public function group(): BelongsTo
     {
         return $this->grupo();
@@ -74,7 +74,6 @@ class Estudiante extends Model
                     ->withTimestamps();
     }
 
-    // Alias for backward compatibility
     public function guardians(): BelongsToMany
     {
         return $this->tutores();

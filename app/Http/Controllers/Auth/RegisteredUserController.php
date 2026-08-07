@@ -29,19 +29,28 @@ class RegisteredUserController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => ['required', 'string', 'max:255'],
+            'nombre' => ['nullable', 'string', 'max:100'],
+            'apellido_paterno' => ['nullable', 'string', 'max:100'],
+            'apellido_materno' => ['nullable', 'string', 'max:100'],
+            'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['required', 'in:parent,teacher'],
+            'role' => ['nullable', 'in:parent,teacher,admin'],
             'phone' => ['nullable', 'string', 'max:20'],
         ]);
 
-        $nameParts = explode(' ', trim($request->name), 3);
-        $nombre = $nameParts[0];
-        $apellidoPaterno = $nameParts[1] ?? '';
-        $apellidoMaterno = $nameParts[2] ?? null;
+        if ($request->filled('nombre') && $request->filled('apellido_paterno')) {
+            $nombre = $request->nombre;
+            $apellidoPaterno = $request->apellido_paterno;
+            $apellidoMaterno = $request->apellido_materno;
+        } else {
+            $nameParts = explode(' ', trim($request->name ?? 'Usuario'), 3);
+            $nombre = $nameParts[0];
+            $apellidoPaterno = $nameParts[1] ?? '';
+            $apellidoMaterno = $nameParts[2] ?? null;
+        }
 
-        $role = $request->role;
+        $role = $request->role ?? 'parent';
 
         $user = User::create([
             'nombre' => $nombre,

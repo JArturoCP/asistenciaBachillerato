@@ -20,28 +20,35 @@ class TeacherAttendanceController extends Controller
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
 
         // 1. Get assigned class schedules for teacher (or all if admin)
-        if ($user->isAdmin()) {
-            $classSchedules = DocenteGrupo::with(['grupo', 'materia'])->get();
-            $assignedGroupIds = Grupo::pluck('id')->toArray();
-        } else {
-            $classSchedules = DocenteGrupo::with(['grupo', 'materia'])
-                ->where('docente_id', $user->id)
-                ->get();
+        $query = DocenteGrupo::with(['grupo', 'materia']);
 
-            $assignedGroupIds = $classSchedules->pluck('grupo_id')->unique()->toArray();
+        if (!$user->isAdmin()) {
+            $query->where('docente_id', $user->id);
         }
 
-        $groups = Grupo::whereIn('id', $assignedGroupIds)->orderBy('codigo_grupo')->get();
+        $classSchedules = $query->get()->sort(function ($a, $b) {
+            $dayOrder = ['lunes' => 1, 'martes' => 2, 'miercoles' => 3, 'jueves' => 4, 'viernes' => 5, 'sabado' => 6];
+            
+            $groupComp = strcmp($a->grupo->codigo_grupo ?? '', $b->grupo->codigo_grupo ?? '');
+            if ($groupComp !== 0) return $groupComp;
 
-        // Selected group (default to first assigned group)
-        $selectedGroupId = $request->input('group_id', $groups->first()?->id);
-        $selectedGroup = $groups->firstWhere('id', $selectedGroupId);
+            $dayA = $dayOrder[$a->dia_semana] ?? 7;
+            $dayB = $dayOrder[$b->dia_semana] ?? 7;
+            if ($dayA !== $dayB) return $dayA <=> $dayB;
 
+            return strcmp($a->hora_inicio ?? '', $b->hora_inicio ?? '');
+        });
+
+        // 2. Selected schedule (default to first assigned class)
+        $selectedScheduleId = $request->input('schedule_id', $classSchedules->first()?->id);
+        $selectedSchedule = $classSchedules->firstWhere('id', $selectedScheduleId);
+
+        $selectedGroup = $selectedSchedule?->grupo;
         $attendanceList = collect();
         $metrics = ['total' => 0, 'presentes' => 0, 'retardos' => 0, 'faltas' => 0, 'justificados' => 0];
 
-        if ($selectedGroup) {
-            // Get all students in selected group
+        if ($selectedSchedule && $selectedGroup) {
+            // Get all active students in group
             $students = Estudiante::with('user')
                 ->where('grupo_id', $selectedGroup->id)
                 ->where('is_active', true)
@@ -76,13 +83,13 @@ class TeacherAttendanceController extends Controller
             }
         }
 
-        AuditLog::log('READ', 'asistencias', null, "Docente consulta asistencia de grupo ID {$selectedGroupId} para fecha {$date}");
+        AuditLog::log('READ', 'asistencias', null, "Docente consulta asistencia de clase ID {$selectedScheduleId} para fecha {$date}");
 
         return view('teacher.attendance.index', compact(
-            'groups',
             'classSchedules',
+            'selectedSchedule',
+            'selectedScheduleId',
             'selectedGroup',
-            'selectedGroupId',
             'date',
             'attendanceList',
             'metrics'
@@ -118,10 +125,19 @@ class TeacherAttendanceController extends Controller
 
     public function exportCsv(Request $request)
     {
+        $scheduleId = $request->input('schedule_id');
         $groupId = $request->input('group_id');
         $date = $request->input('date', Carbon::today()->format('Y-m-d'));
 
-        $group = Grupo::findOrFail($groupId);
+        if ($scheduleId) {
+            $schedule = DocenteGrupo::with(['grupo', 'materia'])->findOrFail($scheduleId);
+            $group = $schedule->grupo;
+            $materiaClave = $schedule->materia?->clave ?? 'MATERIA';
+        } else {
+            $group = Grupo::findOrFail($groupId);
+            $materiaClave = 'GRUPO';
+        }
+
         $students = Estudiante::with('user')->where('grupo_id', $group->id)->get()->sortBy(function($s) {
             return $s->user->apellido_paterno;
         });
@@ -130,7 +146,7 @@ class TeacherAttendanceController extends Controller
             ->get()
             ->keyBy('estudiante_id');
 
-        $filename = "Asistencia_Grupo_{$group->codigo_grupo}_{$date}.csv";
+        $filename = "Asistencia_{$materiaClave}_Grupo_{$group->codigo_grupo}_{$date}.csv";
 
         AuditLog::log('EXPORT', 'asistencias', null, "Exportación CSV de asistencia para grupo {$group->codigo_grupo}");
 

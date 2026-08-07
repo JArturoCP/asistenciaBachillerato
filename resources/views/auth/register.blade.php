@@ -4,16 +4,40 @@
     <form method="POST" action="{{ route('register') }}">
         @csrf
 
-        <!-- Name -->
+        <!-- Nombre(s) -->
         <div class="mb-3">
-            <label for="name" class="form-label fw-semibold small text-muted">Nombre Completo</label>
+            <label for="nombre" class="form-label fw-semibold small text-muted">Nombre(s)</label>
             <div class="input-group">
                 <span class="input-group-text bg-light"><i class="bi bi-person"></i></span>
-                <input id="name" type="text" name="name" class="form-control @error('name') is-invalid @enderror" value="{{ old('name') }}" required autofocus placeholder="Ej. Carlos Pérez Hernández">
+                <input id="nombre" type="text" name="nombre" class="form-control @error('nombre') is-invalid @enderror" value="{{ old('nombre') }}" required autofocus placeholder="Ej. Carlos">
             </div>
-            @error('name')
+            @error('nombre')
                 <div class="text-danger small mt-1">{{ $message }}</div>
             @enderror
+        </div>
+
+        <!-- Apellidos -->
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="apellido_paterno" class="form-label fw-semibold small text-muted">Apellido Paterno</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
+                    <input id="apellido_paterno" type="text" name="apellido_paterno" class="form-control @error('apellido_paterno') is-invalid @enderror" value="{{ old('apellido_paterno') }}" required placeholder="Ej. Pérez">
+                </div>
+                @error('apellido_paterno')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="apellido_materno" class="form-label fw-semibold small text-muted">Apellido Materno</label>
+                <div class="input-group">
+                    <span class="input-group-text bg-light"><i class="bi bi-person-badge"></i></span>
+                    <input id="apellido_materno" type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno') }}" placeholder="Ej. Hernández">
+                </div>
+                @error('apellido_materno')
+                    <div class="text-danger small mt-1">{{ $message }}</div>
+                @enderror
+            </div>
         </div>
 
         <!-- Email Address -->

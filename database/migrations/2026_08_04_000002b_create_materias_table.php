@@ -13,6 +13,7 @@ return new class extends Migration
             $table->string('clave')->unique(); // e.g. MAT-101
             $table->string('nombre'); // e.g. Matemáticas I
             $table->unsignedTinyInteger('semestre')->default(1); // 1 a 6
+            $table->softDeletes();
             $table->timestamps();
         });
     }

@@ -28,7 +28,7 @@
                         <th>Docente</th>
                         <th>Contacto</th>
                         <th>Carga Horaria / Clases Impartidas</th>
-                        <th>Estatus</th>
+                        <th class="text-end">Acciones Docente</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -38,13 +38,13 @@
                                 <div class="fw-bold text-dark fs-6">{{ $teacher->nombre_completo }}</div>
                                 <span class="badge bg-info text-white">DOCENTE BACHILLERATO</span>
                             </td>
-                            <td style="width: 25%;">
+                            <td style="width: 20%;">
                                 <div class="small"><i class="bi bi-envelope text-muted me-1"></i> {{ $teacher->email }}</div>
                                 <div class="small text-muted"><i class="bi bi-telephone text-muted me-1"></i> {{ $teacher->phone ?? 'Sin registro' }}</div>
                             </td>
                             <td>
                                 @forelse($teacher->docenteGrupos as $assignment)
-                                    <div class="d-inline-block border rounded p-2 mb-2 bg-light me-2 align-top shadow-sm">
+                                    <div class="d-inline-block border rounded p-2 mb-2 bg-light me-2 align-top shadow-sm position-relative">
                                         <div class="fw-bold text-primary">
                                             <i class="bi bi-book-half me-1"></i> {{ $assignment->materia?->nombre ?? 'Asignatura' }}
                                         </div>
@@ -58,20 +58,149 @@
                                                 | <i class="bi bi-geo-alt me-1"></i> {{ $assignment->aula }}
                                             @endif
                                         </div>
-                                        <form action="{{ route('admin.teachers.removeAssignment', $assignment) }}" method="POST" class="d-inline mt-1" onsubmit="return confirm('¿Desasignar este horario/materia al docente?');">
-                                            @csrf
-                                            @method('DELETE')
-                                            <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">
-                                                <i class="bi bi-trash me-1"></i> Eliminar Horario
+                                        <div class="mt-2 d-flex gap-2 border-top pt-1">
+                                            <button class="btn btn-link text-primary p-0 small text-decoration-none" data-bs-toggle="modal" data-bs-target="#modalEditAssignment-{{ $assignment->id }}" title="Editar Horario">
+                                                <i class="bi bi-pencil me-1"></i> Editar Horario
                                             </button>
-                                        </form>
+                                            <form action="{{ route('admin.teachers.removeAssignment', $assignment) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Desasignar este horario/materia al docente?');">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit" class="btn btn-link text-danger p-0 small text-decoration-none">
+                                                    <i class="bi bi-trash me-1"></i> Eliminar
+                                                </button>
+                                            </form>
+                                        </div>
+
+                                        <!-- Modal Edit Assignment -->
+                                        <div class="modal fade text-start" id="modalEditAssignment-{{ $assignment->id }}" tabindex="-1" aria-hidden="true">
+                                            <div class="modal-dialog">
+                                                <div class="modal-content card-custom">
+                                                    <form action="{{ route('admin.teachers.updateAssignment', $assignment) }}" method="POST">
+                                                        @csrf
+                                                        @method('PUT')
+                                                        <div class="modal-header">
+                                                            <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-warning me-2"></i> Editar Horario / Clase</h5>
+                                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                        </div>
+                                                        <div class="modal-body">
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Asignatura / Materia</label>
+                                                                <select name="materia_id" class="form-select" required>
+                                                                    @foreach($materias as $materia)
+                                                                        <option value="{{ $materia->id }}" {{ $assignment->materia_id == $materia->id ? 'selected' : '' }}>
+                                                                            {{ $materia->nombre }} ({{ $materia->clave }})
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Grupo Alumno</label>
+                                                                <select name="group_id" class="form-select" required>
+                                                                    @foreach($groups as $group)
+                                                                        <option value="{{ $group->id }}" {{ $assignment->grupo_id == $group->id ? 'selected' : '' }}>
+                                                                            Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
+                                                                        </option>
+                                                                    @endforeach
+                                                                </select>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Día de la Semana</label>
+                                                                <select name="dia_semana" class="form-select" required>
+                                                                    <option value="lunes" {{ $assignment->dia_semana == 'lunes' ? 'selected' : '' }}>Lunes</option>
+                                                                    <option value="martes" {{ $assignment->dia_semana == 'martes' ? 'selected' : '' }}>Martes</option>
+                                                                    <option value="miercoles" {{ $assignment->dia_semana == 'miercoles' ? 'selected' : '' }}>Miércoles</option>
+                                                                    <option value="jueves" {{ $assignment->dia_semana == 'jueves' ? 'selected' : '' }}>Jueves</option>
+                                                                    <option value="viernes" {{ $assignment->dia_semana == 'viernes' ? 'selected' : '' }}>Viernes</option>
+                                                                    <option value="sabado" {{ $assignment->dia_semana == 'sabado' ? 'selected' : '' }}>Sábado</option>
+                                                                </select>
+                                                            </div>
+                                                            <div class="row">
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label fw-semibold">Hora Inicio</label>
+                                                                    <input type="time" name="start_time" class="form-control" value="{{ substr($assignment->hora_inicio, 0, 5) }}" required>
+                                                                </div>
+                                                                <div class="col-md-6 mb-3">
+                                                                    <label class="form-label fw-semibold">Hora Fin</label>
+                                                                    <input type="time" name="end_time" class="form-control" value="{{ substr($assignment->hora_fin, 0, 5) }}" required>
+                                                                </div>
+                                                            </div>
+                                                            <div class="mb-3">
+                                                                <label class="form-label fw-semibold">Aula / Salón (Opcional)</label>
+                                                                <input type="text" name="aula" class="form-control" value="{{ $assignment->aula }}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="modal-footer">
+                                                            <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                            <button type="submit" class="btn btn-warning btn-sm fw-semibold">Actualizar Horario</button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
                                     </div>
                                 @empty
                                     <span class="text-muted small">Sin materias ni clases asignadas aún.</span>
                                 @endforelse
                             </td>
-                            <td style="width: 10%;">
-                                <span class="badge bg-success"><i class="bi bi-check-circle-fill"></i> Activo</span>
+                            <td class="text-end" style="width: 15%;">
+                                <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditTeacher-{{ $teacher->id }}" title="Editar Docente">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <form action="{{ route('admin.teachers.destroyTeacher', $teacher) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar a este Docente?');">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Docente">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+
+                                <!-- Modal Edit Teacher -->
+                                <div class="modal fade text-start" id="modalEditTeacher-{{ $teacher->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content card-custom">
+                                            <form action="{{ route('admin.teachers.updateTeacher', $teacher) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Datos de Docente</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="row">
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Nombre(s)</label>
+                                                            <input type="text" name="nombre" class="form-control" value="{{ $teacher->nombre }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Paterno</label>
+                                                            <input type="text" name="apellido_paterno" class="form-control" value="{{ $teacher->apellido_paterno }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Materno</label>
+                                                            <input type="text" name="apellido_materno" class="form-control" value="{{ $teacher->apellido_materno }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Correo Electrónico (Login)</label>
+                                                        <input type="email" name="email" class="form-control" value="{{ $teacher->email }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Teléfono</label>
+                                                        <input type="text" name="phone" class="form-control" value="{{ $teacher->phone }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Nueva Contraseña (Opcional)</label>
+                                                        <input type="password" name="password" class="form-control" placeholder="Dejar en blanco para conservar actual">
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Actualizar Docente</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -88,7 +217,7 @@
 
     <!-- Modal Create Teacher -->
     <div class="modal fade" id="modalCreateTeacher" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.teachers.store') }}" method="POST">
                     @csrf
@@ -97,9 +226,19 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Nombre Completo (Nombre Paterno Materno)</label>
-                            <input type="text" name="name" class="form-control" placeholder="Ej. Roberto Martínez Sánchez" required>
+                        <div class="row">
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Nombre(s)</label>
+                                <input type="text" name="nombre" class="form-control" placeholder="Ej. Roberto" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Paterno</label>
+                                <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Martínez" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Materno</label>
+                                <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Sánchez">
+                            </div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Correo Electrónico (Login)</label>

@@ -87,15 +87,79 @@
                             </td>
                             <td class="text-end">
                                 <a href="{{ route('admin.students.credential', $student) }}" target="_blank" class="btn btn-outline-dark btn-sm me-1" title="Ver e imprimir Credencial QR">
-                                    <i class="bi bi-qr-code text-primary me-1"></i> Credencial
+                                    <i class="bi bi-qr-code text-primary"></i> Credencial
                                 </a>
+                                <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditStudent-{{ $student->id }}" title="Editar Estudiante">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 <form action="{{ route('admin.students.destroy', $student) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar al estudiante {{ $student->nombre_completo }}?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Estudiante">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+
+                                <!-- Modal Edit Student -->
+                                <div class="modal fade text-start" id="modalEditStudent-{{ $student->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-lg">
+                                        <div class="modal-content card-custom">
+                                            <form action="{{ route('admin.students.update', $student) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Estudiante</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Matrícula</label>
+                                                        <input type="text" name="matricula" class="form-control" value="{{ $student->matricula }}" required>
+                                                    </div>
+                                                    <div class="row">
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Nombre(s)</label>
+                                                            <input type="text" name="nombre" class="form-control" value="{{ $student->user->nombre }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Paterno</label>
+                                                            <input type="text" name="apellido_paterno" class="form-control" value="{{ $student->user->apellido_paterno }}" required>
+                                                        </div>
+                                                        <div class="col-md-4 mb-3">
+                                                            <label class="form-label fw-semibold">Apellido Materno</label>
+                                                            <input type="text" name="apellido_materno" class="form-control" value="{{ $student->user->apellido_materno }}">
+                                                        </div>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Fecha de Nacimiento</label>
+                                                        <input type="date" name="birth_date" class="form-control" value="{{ $student->fecha_nacimiento ? $student->fecha_nacimiento->format('Y-m-d') : '' }}">
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Grupo Asignado</label>
+                                                        <select name="group_id" class="form-select" required>
+                                                            @foreach($groups as $group)
+                                                                <option value="{{ $group->id }}" {{ $student->grupo_id == $group->id ? 'selected' : '' }}>
+                                                                    Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
+                                                                </option>
+                                                            @endforeach
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Estado del Estudiante</label>
+                                                        <select name="is_active" class="form-select" required>
+                                                            <option value="1" {{ $student->is_active ? 'selected' : '' }}>Activo</option>
+                                                            <option value="0" {{ !$student->is_active ? 'selected' : '' }}>Inactivo</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Actualizar Estudiante</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @empty
@@ -116,7 +180,7 @@
 
     <!-- Modal Create Student -->
     <div class="modal fade" id="modalCreateStudent" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog">
+        <div class="modal-dialog modal-lg">
             <div class="modal-content card-custom">
                 <form action="{{ route('admin.students.store') }}" method="POST">
                     @csrf
@@ -130,13 +194,17 @@
                             <input type="text" name="matricula" class="form-control" placeholder="Ej. BAC-2026-001" required>
                         </div>
                         <div class="row">
-                            <div class="col-md-6 mb-3">
+                            <div class="col-md-4 mb-3">
                                 <label class="form-label fw-semibold">Nombre(s)</label>
-                                <input type="text" name="first_name" class="form-control" placeholder="Ej. Juan Manuel" required>
+                                <input type="text" name="nombre" class="form-control" placeholder="Ej. Juan Manuel" required>
                             </div>
-                            <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Apellidos (Paterno Materno)</label>
-                                <input type="text" name="last_name" class="form-control" placeholder="Ej. Pérez Gómez" required>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Paterno</label>
+                                <input type="text" name="apellido_paterno" class="form-control" placeholder="Ej. Pérez" required>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label class="form-label fw-semibold">Apellido Materno</label>
+                                <input type="text" name="apellido_materno" class="form-control" placeholder="Ej. Gómez">
                             </div>
                         </div>
                         <div class="mb-3">

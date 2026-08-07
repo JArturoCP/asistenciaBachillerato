@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('grado'); // e.g. 1, 2, 3
             $table->enum('turno', ['matutino', 'vespertino'])->default('matutino');
             $table->string('ciclo_escolar'); // e.g. 2026-2027
+            $table->softDeletes();
             $table->timestamps();
         });
     }

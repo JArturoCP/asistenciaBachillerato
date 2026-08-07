@@ -44,13 +44,61 @@
                                 <span class="badge bg-light text-dark border">{{ $group->docente_grupos_count }} asignaciones</span>
                             </td>
                             <td class="text-end">
+                                <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGroup-{{ $group->id }}" title="Editar Grupo">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
                                 <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="d-inline" onsubmit="return confirm('¿Está seguro de eliminar este grupo?');">
                                     @csrf
                                     @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Grupo">
                                         <i class="bi bi-trash"></i>
                                     </button>
                                 </form>
+
+                                <!-- Modal Edit Group -->
+                                <div class="modal fade text-start" id="modalEditGroup-{{ $group->id }}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content card-custom">
+                                            <form action="{{ route('admin.groups.update', $group) }}" method="POST">
+                                                @csrf
+                                                @method('PUT')
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square text-primary me-2"></i> Editar Grupo {{ $group->codigo_grupo }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Código del Grupo</label>
+                                                        <input type="text" name="group_code" class="form-control" value="{{ $group->codigo_grupo }}" required>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Grado / Semestre</label>
+                                                        <select name="grade" class="form-select" required>
+                                                            <option value="1" {{ $group->grado == 1 ? 'selected' : '' }}>1er Grado</option>
+                                                            <option value="2" {{ $group->grado == 2 ? 'selected' : '' }}>2do Grado</option>
+                                                            <option value="3" {{ $group->grado == 3 ? 'selected' : '' }}>3er Grado</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Turno</label>
+                                                        <select name="shift" class="form-select" required>
+                                                            <option value="matutino" {{ $group->turno == 'matutino' ? 'selected' : '' }}>Matutino</option>
+                                                            <option value="vespertino" {{ $group->turno == 'vespertino' ? 'selected' : '' }}>Vespertino</option>
+                                                        </select>
+                                                    </div>
+                                                    <div class="mb-3">
+                                                        <label class="form-label fw-semibold">Ciclo Escolar</label>
+                                                        <input type="text" name="school_year" class="form-control" value="{{ $group->ciclo_escolar }}" required>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancelar</button>
+                                                    <button type="submit" class="btn btn-primary btn-sm">Actualizar Grupo</button>
+                                                </div>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </td>
                         </tr>
                     @empty

@@ -30,21 +30,18 @@ class AdminTeacherController extends Controller
     public function storeTeacher(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|max:20',
             'password' => 'required|string|min:8',
         ]);
 
-        $nameParts = explode(' ', trim($validated['name']), 3);
-        $nombre = $nameParts[0];
-        $apellidoPaterno = $nameParts[1] ?? '';
-        $apellidoMaterno = $nameParts[2] ?? null;
-
         $teacher = User::create([
-            'nombre' => $nombre,
-            'apellido_paterno' => $apellidoPaterno,
-            'apellido_materno' => $apellidoMaterno,
+            'nombre' => $validated['nombre'],
+            'apellido_paterno' => $validated['apellido_paterno'],
+            'apellido_materno' => $validated['apellido_materno'] ?? null,
             'email' => $validated['email'],
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
@@ -54,6 +51,46 @@ class AdminTeacherController extends Controller
         AuditLog::log('WRITE', 'users', $teacher->id, "Docente registrado: {$teacher->nombre_completo}");
 
         return redirect()->route('admin.teachers.index')->with('success', "Docente {$teacher->nombre_completo} registrado exitosamente.");
+    }
+
+    public function updateTeacher(Request $request, User $teacher)
+    {
+        $validated = $request->validate([
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
+            'email' => 'required|email|unique:users,email,' . $teacher->id,
+            'phone' => 'nullable|string|max:20',
+            'password' => 'nullable|string|min:8',
+        ]);
+
+        $updateData = [
+            'nombre' => $validated['nombre'],
+            'apellido_paterno' => $validated['apellido_paterno'],
+            'apellido_materno' => $validated['apellido_materno'] ?? null,
+            'email' => $validated['email'],
+            'phone' => $validated['phone'],
+        ];
+
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        $teacher->update($updateData);
+
+        AuditLog::log('WRITE', 'users', $teacher->id, "Docente actualizado: {$teacher->nombre_completo}");
+
+        return redirect()->route('admin.teachers.index')->with('success', "Docente {$teacher->nombre_completo} actualizado correctamente.");
+    }
+
+    public function destroyTeacher(User $teacher)
+    {
+        $name = $teacher->nombre_completo;
+        $teacher->delete();
+
+        AuditLog::log('WRITE', 'users', null, "Docente eliminado (Soft Delete): {$name}");
+
+        return redirect()->route('admin.teachers.index')->with('success', "Docente {$name} eliminado del sistema.");
     }
 
     public function storeMateria(Request $request)
@@ -99,11 +136,36 @@ class AdminTeacherController extends Controller
         return redirect()->route('admin.teachers.index')->with('success', "Horario y materia asignados exitosamente al docente.");
     }
 
+    public function updateAssignment(Request $request, DocenteGrupo $teacherGroup)
+    {
+        $validated = $request->validate([
+            'materia_id' => 'required|exists:materias,id',
+            'group_id' => 'required|exists:grupos,id',
+            'dia_semana' => 'required|in:lunes,martes,miercoles,jueves,viernes,sabado',
+            'start_time' => 'required',
+            'end_time' => 'required',
+            'aula' => 'nullable|string|max:50',
+        ]);
+
+        $teacherGroup->update([
+            'materia_id' => $validated['materia_id'],
+            'grupo_id' => $validated['group_id'],
+            'dia_semana' => $validated['dia_semana'],
+            'hora_inicio' => $validated['start_time'],
+            'hora_fin' => $validated['end_time'],
+            'aula' => $validated['aula'] ?? null,
+        ]);
+
+        AuditLog::log('WRITE', 'docente_grupo', $teacherGroup->id, "Horario/materia asignado actualizado");
+
+        return redirect()->route('admin.teachers.index')->with('success', "Horario de clase actualizado correctamente.");
+    }
+
     public function removeAssignment(DocenteGrupo $teacherGroup)
     {
         $materiaNombre = $teacherGroup->materia?->nombre ?? 'Clase';
         $teacherGroup->delete();
-        AuditLog::log('WRITE', 'docente_grupo', null, "Asignación eliminada: {$materiaNombre}");
+        AuditLog::log('WRITE', 'docente_grupo', null, "Asignación eliminada (Soft Delete): {$materiaNombre}");
 
         return redirect()->route('admin.teachers.index')->with('success', "Asignación de {$materiaNombre} eliminada.");
     }

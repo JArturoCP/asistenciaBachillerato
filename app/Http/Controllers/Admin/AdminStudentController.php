@@ -45,22 +45,18 @@ class AdminStudentController extends Controller
     {
         $validated = $request->validate([
             'matricula' => 'required|string|unique:estudiantes,matricula',
-            'first_name' => 'required|string|max:100', // Nombre
-            'last_name' => 'required|string|max:100',  // Apellidos
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'group_id' => 'required|exists:grupos,id',
         ]);
 
-        // Split last_name into paterno & materno if provided
-        $nameParts = explode(' ', trim($validated['last_name']), 2);
-        $apellidoPaterno = $nameParts[0];
-        $apellidoMaterno = $nameParts[1] ?? null;
-
-        DB::transaction(function () use ($validated, $apellidoPaterno, $apellidoMaterno, &$student) {
+        DB::transaction(function () use ($validated, &$student) {
             $user = User::create([
-                'nombre' => $validated['first_name'],
-                'apellido_paterno' => $apellidoPaterno,
-                'apellido_materno' => $apellidoMaterno,
+                'nombre' => $validated['nombre'],
+                'apellido_paterno' => $validated['apellido_paterno'],
+                'apellido_materno' => $validated['apellido_materno'] ?? null,
                 'role' => 'student',
             ]);
 
@@ -81,22 +77,19 @@ class AdminStudentController extends Controller
     {
         $validated = $request->validate([
             'matricula' => 'required|string|unique:estudiantes,matricula,' . $student->id,
-            'first_name' => 'required|string|max:100',
-            'last_name' => 'required|string|max:100',
+            'nombre' => 'required|string|max:100',
+            'apellido_paterno' => 'required|string|max:100',
+            'apellido_materno' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'group_id' => 'required|exists:grupos,id',
             'is_active' => 'required|boolean',
         ]);
 
-        $nameParts = explode(' ', trim($validated['last_name']), 2);
-        $apellidoPaterno = $nameParts[0];
-        $apellidoMaterno = $nameParts[1] ?? null;
-
-        DB::transaction(function () use ($student, $validated, $apellidoPaterno, $apellidoMaterno) {
+        DB::transaction(function () use ($student, $validated) {
             $student->user->update([
-                'nombre' => $validated['first_name'],
-                'apellido_paterno' => $apellidoPaterno,
-                'apellido_materno' => $apellidoMaterno,
+                'nombre' => $validated['nombre'],
+                'apellido_paterno' => $validated['apellido_paterno'],
+                'apellido_materno' => $validated['apellido_materno'] ?? null,
             ]);
 
             $student->update([
@@ -121,7 +114,7 @@ class AdminStudentController extends Controller
             $user->delete();
         }
 
-        AuditLog::log('WRITE', 'estudiantes', null, "Estudiante eliminado: {$name}");
+        AuditLog::log('WRITE', 'estudiantes', null, "Estudiante eliminado (Soft Delete): {$name}");
 
         return redirect()->route('admin.students.index')->with('success', "Estudiante {$name} eliminado.");
     }
@@ -130,7 +123,6 @@ class AdminStudentController extends Controller
     {
         $student->load(['user', 'grupo', 'tutores']);
         
-        // QR contains ONLY pseudonymized UUID
         $qrCodeSvg = QrCode::size(180)->margin(1)->generate($student->uuid);
         
         AuditLog::log('READ', 'estudiantes', $student->id, "Generación de credencial QR para: {$student->nombre_completo}");

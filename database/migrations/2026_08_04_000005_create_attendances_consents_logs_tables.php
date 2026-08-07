@@ -17,6 +17,7 @@ return new class extends Migration
             $table->time('hora_inicio')->nullable();
             $table->time('hora_fin')->nullable();
             $table->string('aula')->nullable(); // e.g. Aula 101, Lab de Química
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -29,6 +30,7 @@ return new class extends Migration
             $table->enum('estado', ['presente', 'retardo', 'falta', 'justificado'])->default('presente');
             $table->enum('metodo_escaneo', ['qr_camera', 'qr_usb', 'manual_admin'])->default('qr_usb');
             $table->string('observaciones')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
 
@@ -41,6 +43,7 @@ return new class extends Migration
             $table->string('ip_address')->nullable();
             $table->timestamp('fecha_otorgado')->useCurrent();
             $table->timestamp('fecha_revocado')->nullable();
+            $table->softDeletes();
             $table->timestamps();
         });
 
