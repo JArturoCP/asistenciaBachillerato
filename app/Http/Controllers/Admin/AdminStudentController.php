@@ -36,16 +36,16 @@ class AdminStudentController extends Controller
 
         $students = $query->paginate(15);
         $groups = Grupo::orderBy('codigo_grupo')->get();
+        $nextMatricula = Estudiante::generateNextMatricula();
 
         AuditLog::log('READ', 'estudiantes', null, 'Consulta de listado de estudiantes');
 
-        return view('admin.students.index', compact('students', 'groups'));
+        return view('admin.students.index', compact('students', 'groups', 'nextMatricula'));
     }
 
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'matricula' => 'required|string|unique:estudiantes,matricula',
             'nombre' => 'required|string|max:100',
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
@@ -53,8 +53,6 @@ class AdminStudentController extends Controller
             'group_id' => 'required|exists:grupos,id',
             'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ], [
-            'matricula.required' => 'La matrícula estudiantil es obligatoria.',
-            'matricula.unique' => 'La matrícula ingresada ya pertenece a otro estudiante.',
             'nombre.required' => 'El nombre del estudiante es obligatorio.',
             'apellido_paterno.required' => 'El apellido paterno del estudiante es obligatorio.',
             'group_id.required' => 'Debe asignar un grupo académico al estudiante.',
@@ -63,12 +61,14 @@ class AdminStudentController extends Controller
             'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
 
+        $matricula = Estudiante::generateNextMatricula();
+
         $photoPath = null;
         if ($request->hasFile('foto')) {
             $photoPath = $request->file('foto')->store('estudiantes/fotos', 'public');
         }
 
-        DB::transaction(function () use ($validated, $photoPath, &$student) {
+        DB::transaction(function () use ($validated, $matricula, $photoPath, &$student) {
             $user = User::create([
                 'nombre' => $validated['nombre'],
                 'apellido_paterno' => $validated['apellido_paterno'],
@@ -79,7 +79,7 @@ class AdminStudentController extends Controller
 
             $student = Estudiante::create([
                 'user_id' => $user->id,
-                'matricula' => $validated['matricula'],
+                'matricula' => $matricula,
                 'foto' => $photoPath,
                 'fecha_nacimiento' => $validated['birth_date'],
                 'grupo_id' => $validated['group_id'],
@@ -88,7 +88,7 @@ class AdminStudentController extends Controller
 
         AuditLog::log('WRITE', 'estudiantes', $student->id, "Estudiante creado: {$student->nombre_completo} ({$student->matricula})");
 
-        return redirect()->route('admin.students.index')->with('success', "Estudiante {$student->nombre_completo} registrado exitosamente.");
+        return redirect()->route('admin.students.index')->with('success', "Estudiante {$student->nombre_completo} registrado exitosamente con la matrícula {$student->matricula}.");
     }
 
     public function update(Request $request, Estudiante $student)

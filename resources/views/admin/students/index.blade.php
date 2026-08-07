@@ -234,8 +234,8 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Matrícula</label>
-                                <input type="text" name="matricula" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula') }}" placeholder="Ej. BAC-2026-001" required>
+                                <label class="form-label fw-semibold">Matrícula Asignada (Automática)</label>
+                                <input type="text" name="matricula" class="form-control bg-light fw-bold text-primary font-monospace" value="{{ $nextMatricula }}" readonly>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>

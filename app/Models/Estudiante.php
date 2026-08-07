@@ -40,7 +40,39 @@ class Estudiante extends Model
             if (empty($estudiante->uuid)) {
                 $estudiante->uuid = (string) Str::uuid();
             }
+            if (empty($estudiante->matricula)) {
+                $estudiante->matricula = self::generateNextMatricula();
+            }
         });
+    }
+
+    public static function generateNextMatricula(): string
+    {
+        $year = date('Y');
+        $prefix = "BAC-{$year}-";
+
+        $maxNum = 0;
+        $matriculas = self::withTrashed()
+            ->where('matricula', 'like', "{$prefix}%")
+            ->pluck('matricula');
+
+        foreach ($matriculas as $m) {
+            if (preg_match('/BAC-\d{4}-(\d+)/', $m, $matches)) {
+                $num = intval($matches[1]);
+                if ($num > $maxNum) {
+                    $maxNum = $num;
+                }
+            }
+        }
+
+        if ($maxNum === 0) {
+            $count = self::withTrashed()->count();
+            $nextNum = $count + 1;
+        } else {
+            $nextNum = $maxNum + 1;
+        }
+
+        return sprintf("BAC-%s-%03d", $year, $nextNum);
     }
 
     public function getNombreCompletoAttribute(): string
