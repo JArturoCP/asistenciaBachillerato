@@ -44,6 +44,7 @@
             <table class="table table-hover align-middle table-custom mb-0">
                 <thead>
                     <tr>
+                        <th>Foto</th>
                         <th>Matrícula</th>
                         <th>Nombre Completo</th>
                         <th>Grupo</th>
@@ -56,6 +57,15 @@
                 <tbody>
                     @forelse($students as $student)
                         <tr>
+                            <td>
+                                @if($student->foto)
+                                    <img src="{{ asset('storage/' . $student->foto) }}" alt="Foto de {{ $student->nombre_completo }}" class="rounded-circle border object-fit-cover" style="width: 42px; height: 42px;">
+                                @else
+                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold" style="width: 42px; height: 42px;">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                @endif
+                            </td>
                             <td><span class="fw-bold font-monospace text-dark">{{ $student->matricula }}</span></td>
                             <td>
                                 <div class="fw-bold text-dark">{{ $student->nombre_completo }}</div>
@@ -68,7 +78,7 @@
                             </td>
                             <td>
                                 <code class="small text-muted" title="{{ $student->uuid }}">
-                                    {{ Str::limit($student->uuid, 18) }}
+                                    {{ Str::limit($student->uuid, 16) }}
                                 </code>
                             </td>
                             <td>
@@ -104,7 +114,7 @@
                                 <div class="modal fade text-start" id="modalEditStudent-{{ $student->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-lg">
                                         <div class="modal-content card-custom">
-                                            <form action="{{ route('admin.students.update', $student) }}" method="POST">
+                                            <form action="{{ route('admin.students.update', $student) }}" method="POST" enctype="multipart/form-data">
                                                 @csrf
                                                 @method('PUT')
                                                 <div class="modal-header">
@@ -112,9 +122,18 @@
                                                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                 </div>
                                                 <div class="modal-body">
-                                                    <div class="mb-3">
-                                                        <label class="form-label fw-semibold">Matrícula</label>
-                                                        <input type="text" name="matricula" class="form-control" value="{{ $student->matricula }}" required>
+                                                    <div class="row">
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">Matrícula</label>
+                                                            <input type="text" name="matricula" class="form-control" value="{{ $student->matricula }}" required>
+                                                        </div>
+                                                        <div class="col-md-6 mb-3">
+                                                            <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
+                                                            <input type="file" name="foto" class="form-control" accept="image/*">
+                                                            @if($student->foto)
+                                                                <small class="text-success"><i class="bi bi-check-circle me-1"></i> Fotografía guardada previamente</small>
+                                                            @endif
+                                                        </div>
                                                     </div>
                                                     <div class="row">
                                                         <div class="col-md-4 mb-3">
@@ -164,7 +183,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="7" class="text-center py-4 text-muted">
+                            <td colspan="8" class="text-center py-4 text-muted">
                                 <i class="bi bi-person-x fs-3 d-block mb-2"></i> No se encontraron estudiantes con los criterios especificados.
                             </td>
                         </tr>
@@ -182,16 +201,22 @@
     <div class="modal fade" id="modalCreateStudent" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content card-custom">
-                <form action="{{ route('admin.students.store') }}" method="POST">
+                <form action="{{ route('admin.students.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <div class="modal-header">
                         <h5 class="modal-title fw-bold"><i class="bi bi-person-plus text-primary me-2"></i> Registrar Nuevo Estudiante</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Matrícula</label>
-                            <input type="text" name="matricula" class="form-control" placeholder="Ej. BAC-2026-001" required>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Matrícula</label>
+                                <input type="text" name="matricula" class="form-control" placeholder="Ej. BAC-2026-001" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
+                                <input type="file" name="foto" class="form-control" accept="image/*">
+                            </div>
                         </div>
                         <div class="row">
                             <div class="col-md-4 mb-3">

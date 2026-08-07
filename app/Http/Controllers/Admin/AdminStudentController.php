@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
 class AdminStudentController extends Controller
@@ -50,9 +51,15 @@ class AdminStudentController extends Controller
             'apellido_materno' => 'nullable|string|max:100',
             'birth_date' => 'nullable|date',
             'group_id' => 'required|exists:grupos,id',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        DB::transaction(function () use ($validated, &$student) {
+        $photoPath = null;
+        if ($request->hasFile('foto')) {
+            $photoPath = $request->file('foto')->store('estudiantes/fotos', 'public');
+        }
+
+        DB::transaction(function () use ($validated, $photoPath, &$student) {
             $user = User::create([
                 'nombre' => $validated['nombre'],
                 'apellido_paterno' => $validated['apellido_paterno'],
@@ -63,6 +70,7 @@ class AdminStudentController extends Controller
             $student = Estudiante::create([
                 'user_id' => $user->id,
                 'matricula' => $validated['matricula'],
+                'foto' => $photoPath,
                 'fecha_nacimiento' => $validated['birth_date'],
                 'grupo_id' => $validated['group_id'],
             ]);
@@ -83,9 +91,18 @@ class AdminStudentController extends Controller
             'birth_date' => 'nullable|date',
             'group_id' => 'required|exists:grupos,id',
             'is_active' => 'required|boolean',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
-        DB::transaction(function () use ($student, $validated) {
+        $photoPath = $student->foto;
+        if ($request->hasFile('foto')) {
+            if ($student->foto && Storage::disk('public')->exists($student->foto)) {
+                Storage::disk('public')->delete($student->foto);
+            }
+            $photoPath = $request->file('foto')->store('estudiantes/fotos', 'public');
+        }
+
+        DB::transaction(function () use ($student, $validated, $photoPath) {
             $student->user->update([
                 'nombre' => $validated['nombre'],
                 'apellido_paterno' => $validated['apellido_paterno'],
@@ -94,6 +111,7 @@ class AdminStudentController extends Controller
 
             $student->update([
                 'matricula' => $validated['matricula'],
+                'foto' => $photoPath,
                 'fecha_nacimiento' => $validated['birth_date'],
                 'grupo_id' => $validated['group_id'],
                 'is_active' => $validated['is_active'],
@@ -123,7 +141,7 @@ class AdminStudentController extends Controller
     {
         $student->load(['user', 'grupo', 'tutores']);
         
-        $qrCodeSvg = QrCode::size(180)->margin(1)->generate($student->uuid);
+        $qrCodeSvg = QrCode::size(170)->margin(1)->generate($student->uuid);
         
         AuditLog::log('READ', 'estudiantes', $student->id, "Generación de credencial QR para: {$student->nombre_completo}");
 

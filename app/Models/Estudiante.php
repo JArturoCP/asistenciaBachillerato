@@ -20,6 +20,7 @@ class Estudiante extends Model
         'user_id',
         'uuid',
         'matricula',
+        'foto',
         'fecha_nacimiento',
         'grupo_id',
         'is_active',

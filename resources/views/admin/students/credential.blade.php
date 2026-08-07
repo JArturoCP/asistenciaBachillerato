@@ -46,11 +46,20 @@
             padding: 20px;
         }
 
+        .student-photo {
+            width: 100px;
+            height: 100px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 3px solid #f59e0b;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        }
+
         .qr-box {
             background: #f8fafc;
             border: 2px dashed #cbd5e1;
             border-radius: 12px;
-            padding: 12px;
+            padding: 10px;
             display: inline-block;
         }
 
@@ -98,11 +107,15 @@
 
         <!-- Body -->
         <div class="id-card-body text-center">
-            <!-- Student Avatar -->
+            <!-- Student Photo / Avatar -->
             <div class="mb-3">
-                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 70px; height: 70px; font-size: 2rem;">
-                    <i class="bi bi-person-fill"></i>
-                </div>
+                @if($student->foto)
+                    <img src="{{ asset('storage/' . $student->foto) }}" alt="Foto de {{ $student->nombre_completo }}" class="student-photo">
+                @else
+                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center" style="width: 85px; height: 85px; font-size: 2.5rem; border: 3px solid #cbd5e1;">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                @endif
             </div>
 
             <!-- Student Info -->
