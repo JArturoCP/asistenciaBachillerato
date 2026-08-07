@@ -17,7 +17,6 @@ class TeacherAttendanceController extends Controller
     public function index(Request $request)
     {
         $user = auth()->user();
-        $date = $request->input('date', Carbon::today('America/Mexico_City')->format('Y-m-d'));
 
         // 1. Get assigned class schedules for teacher (or all if admin)
         $query = DocenteGrupo::with(['grupo', 'materia']);
@@ -43,6 +42,26 @@ class TeacherAttendanceController extends Controller
         $selectedScheduleId = $request->input('schedule_id', $classSchedules->first()?->id);
         $selectedSchedule = $classSchedules->firstWhere('id', $selectedScheduleId);
 
+        // 3. Map day of week to offset from Monday (Lunes = 0, ..., Sabado = 5)
+        $dayOffsetMap = [
+            'lunes' => 0,
+            'martes' => 1,
+            'miercoles' => 2,
+            'jueves' => 3,
+            'viernes' => 4,
+            'sabado' => 5,
+        ];
+
+        $refDateInput = $request->input('date');
+        $baseDate = $refDateInput ? Carbon::parse($refDateInput, 'America/Mexico_City') : Carbon::today('America/Mexico_City');
+
+        if ($selectedSchedule && isset($dayOffsetMap[strtolower($selectedSchedule->dia_semana)])) {
+            $offset = $dayOffsetMap[strtolower($selectedSchedule->dia_semana)];
+            $date = $baseDate->copy()->startOfWeek()->addDays($offset)->format('Y-m-d');
+        } else {
+            $date = $baseDate->format('Y-m-d');
+        }
+
         $selectedGroup = $selectedSchedule?->grupo;
         $attendanceList = collect();
         $metrics = ['total' => 0, 'presentes' => 0, 'retardos' => 0, 'faltas' => 0, 'justificados' => 0];
@@ -61,11 +80,18 @@ class TeacherAttendanceController extends Controller
                     return strnatcasecmp($a->user->nombre ?? '', $b->user->nombre ?? '');
                 });
 
-            // Get attendances for selected date
+            // Get attendances ONLY for the calculated date corresponding to this class schedule's day of week
             $attendancesToday = Asistencia::whereIn('estudiante_id', $students->pluck('id'))
                 ->whereDate('fecha', $date)
                 ->get()
                 ->keyBy('estudiante_id');
+
+            $statusMap = [
+                'presente' => 'presentes',
+                'retardo' => 'retardos',
+                'falta' => 'faltas',
+                'justificado' => 'justificados',
+            ];
 
             foreach ($students as $student) {
                 $att = $attendancesToday->get($student->id);
@@ -81,9 +107,8 @@ class TeacherAttendanceController extends Controller
                 ]);
 
                 $metrics['total']++;
-                if (isset($metrics[$status])) {
-                    $metrics[$status]++;
-                }
+                $metricKey = $statusMap[$status] ?? 'faltas';
+                $metrics[$metricKey]++;
             }
         }
 
@@ -137,15 +162,34 @@ class TeacherAttendanceController extends Controller
     {
         $scheduleId = $request->input('schedule_id');
         $groupId = $request->input('group_id');
-        $date = $request->input('date', Carbon::today('America/Mexico_City')->format('Y-m-d'));
+        $dateInput = $request->input('date');
+
+        $dayOffsetMap = [
+            'lunes' => 0,
+            'martes' => 1,
+            'miercoles' => 2,
+            'jueves' => 3,
+            'viernes' => 4,
+            'sabado' => 5,
+        ];
+
+        $refDate = $dateInput ? Carbon::parse($dateInput, 'America/Mexico_City') : Carbon::today('America/Mexico_City');
 
         if ($scheduleId) {
             $schedule = DocenteGrupo::with(['grupo', 'materia'])->findOrFail($scheduleId);
             $group = $schedule->grupo;
             $materiaClave = $schedule->materia?->clave ?? 'MATERIA';
+
+            if (isset($dayOffsetMap[strtolower($schedule->dia_semana)])) {
+                $offset = $dayOffsetMap[strtolower($schedule->dia_semana)];
+                $date = $refDate->copy()->startOfWeek()->addDays($offset)->format('Y-m-d');
+            } else {
+                $date = $refDate->format('Y-m-d');
+            }
         } else {
             $group = Grupo::findOrFail($groupId);
             $materiaClave = 'GRUPO';
+            $date = $refDate->format('Y-m-d');
         }
 
         $students = Estudiante::with('user')
@@ -170,7 +214,9 @@ class TeacherAttendanceController extends Controller
 
         $response = new StreamedResponse(function () use ($students, $attendances, $date) {
             $handle = fopen('php://output', 'w');
-            fputcsv($handle, ['Matricula', 'Nombre Alumno', 'Fecha', 'Hora Entrada', 'Hora Salida', 'Estado', 'Notas']);
+            // Write UTF-8 BOM for Microsoft Excel compatibility
+            fputs($handle, "\xEF\xBB\xBF");
+            fputcsv($handle, ['Matrícula', 'Nombre Alumno', 'Fecha', 'Hora Entrada', 'Hora Salida', 'Estado', 'Notas']);
 
             foreach ($students as $student) {
                 $att = $attendances->get($student->id);
