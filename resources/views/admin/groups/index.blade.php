@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-diagram-3 text-success me-2"></i> Gestión de Grupos Académicos
@@ -8,7 +9,9 @@
                 <i class="bi bi-plus-circle me-1"></i> Nuevo Grupo
             </button>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <div class="card card-custom p-4 bg-white">
         <div class="table-responsive">
@@ -180,4 +183,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

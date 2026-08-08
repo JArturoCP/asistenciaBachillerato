@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-house-heart text-success me-2"></i> Portal de Padres y Tutores
@@ -8,7 +9,9 @@
                 <i class="bi bi-shield-check me-1"></i> Cumplimiento LFPDPPP México
             </span>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     @if($students->count() > 0)
         <!-- Child Selector Bar (if parent has multiple children) -->
@@ -170,4 +173,4 @@
             <p class="text-muted">Por favor acuda a la dirección escolar para vincular a su hijo(a) y firmar el Aviso de Privacidad LFPDPPP.</p>
         </div>
     @endif
-</x-app-layout>
+@endsection

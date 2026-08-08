@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-person-check-fill text-warning me-2"></i> Solicitudes de Registro Pendientes
@@ -8,7 +9,9 @@
                 {{ $pendingUsers->count() }} {{ Str::plural('solicitud', $pendingUsers->count()) }} pendientes
             </span>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <!-- Info Banner -->
     <div class="alert alert-light border card-custom p-3 mb-4">
@@ -100,4 +103,4 @@
             </table>
         </div>
     </div>
-</x-app-layout>
+@endsection

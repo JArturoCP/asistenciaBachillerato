@@ -1,9 +1,12 @@
-<x-app-layout>
-    <x-slot name="header">
-        <h2 class="h4 font-weight-bold text-dark mb-0">
-            <i class="bi bi-speedometer2 text-primary me-2"></i> Panel de Control Principal
-        </h2>
-    </x-slot>
+@extends('layouts.app')
+
+@section('header')
+    <h2 class="h4 font-weight-bold text-dark mb-0">
+        <i class="bi bi-speedometer2 text-primary me-2"></i> Panel de Control Principal
+    </h2>
+@endsection
+
+@section('content')
 
     @php
         $totalStudents = \App\Models\Estudiante::count();
@@ -163,4 +166,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

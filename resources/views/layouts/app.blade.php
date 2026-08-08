@@ -50,17 +50,23 @@
         </style>
     </head>
     <body>
-        <div class="min-h-screen">
+        <div class="d-flex flex-column min-vh-100">
             @include('layouts.navigation')
 
             <!-- Page Heading -->
-            @isset($header)
+            @hasSection('header')
+                <header class="bg-white shadow-sm border-bottom py-3">
+                    <div class="container">
+                        @yield('header')
+                    </div>
+                </header>
+            @elseif(isset($header))
                 <header class="bg-white shadow-sm border-bottom py-3">
                     <div class="container">
                         {{ $header }}
                     </div>
                 </header>
-            @endisset
+            @endif
 
             <!-- Page Content -->
             <main class="py-4">
@@ -86,7 +92,11 @@
                         </div>
                     @endif
 
-                    {{ $slot }}
+                    @hasSection('content')
+                        @yield('content')
+                    @else
+                        {{ $slot ?? '' }}
+                    @endif
                 </div>
             </main>
         </div>

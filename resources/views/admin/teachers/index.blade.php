@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-journal-text text-warning me-2"></i> Plantilla Docente y Carga Académica (Bachillerato)
@@ -16,7 +17,9 @@
                 </button>
             </div>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <!-- Teachers List Accordion -->
     <div class="card card-custom p-4 bg-white mb-4">
@@ -439,4 +442,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

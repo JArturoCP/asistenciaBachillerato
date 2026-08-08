@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-person-badge text-primary me-2"></i> Gestión de Estudiantes
@@ -8,7 +9,9 @@
                 <i class="bi bi-person-plus me-1"></i> Registrar Estudiante
             </button>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <!-- Filter Bar -->
     <div class="card card-custom p-3 bg-white mb-4">
@@ -281,4 +284,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

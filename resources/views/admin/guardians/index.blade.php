@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-shield-check text-info me-2"></i> Padres de Familia y Consentimiento LFPDPPP
@@ -13,7 +14,9 @@
                 </button>
             </div>
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <!-- Info Banner LFPDPPP -->
     <div class="alert alert-light border card-custom p-3 mb-4">
@@ -310,4 +313,4 @@
             </div>
         </div>
     </div>
-</x-app-layout>
+@endsection

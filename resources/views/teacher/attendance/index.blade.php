@@ -1,5 +1,6 @@
-<x-app-layout>
-    <x-slot name="header">
+@extends('layouts.app')
+
+@section('header')
         <div class="d-flex justify-content-between align-items-center">
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-journal-check text-primary me-2"></i> Reporte de Asistencia por Clase / Grupo
@@ -10,7 +11,9 @@
                 </a>
             @endif
         </div>
-    </x-slot>
+@endsection
+
+@section('content')
 
     <!-- Class Schedule Filter Bar -->
     <div class="card card-custom p-4 bg-white mb-4">
@@ -198,4 +201,4 @@
             <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i> No tiene materias ni horarios asignados en el ciclo escolar actual.
         </div>
     @endif
-</x-app-layout>
+@endsection
