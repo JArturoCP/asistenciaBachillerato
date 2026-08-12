@@ -62,9 +62,16 @@
                             <td>{{ $guardian->telefono ?? 'Sin registro' }}</td>
                             <td>
                                 @forelse($guardian->estudiantes as $student)
-                                    <div class="badge bg-light text-dark border p-2 me-1 mb-1">
+                                    <div class="badge bg-light text-dark border p-2 me-1 mb-1 d-inline-flex align-items-center">
                                         <i class="bi bi-mortarboard-fill text-primary me-1"></i>
-                                        <strong>{{ $student->nombre_completo }}</strong> ({{ $student->grupo->codigo_grupo }})
+                                        <strong>{{ $student->nombre_completo }}</strong> &nbsp;({{ $student->grupo->codigo_grupo }})
+                                        <form action="{{ route('admin.guardians.unlinkStudent', [$guardian->id, $student->id]) }}" method="POST" class="d-inline ms-2" onsubmit="return confirmDelete(event, '¿Desvincular a {{ $student->nombre_completo }} de este tutor?');">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="btn btn-link text-danger p-0 border-0 ms-1" style="font-size: 0.85rem; line-height: 1;" title="Desvincular Alumno">
+                                                <i class="bi bi-x-circle-fill"></i>
+                                            </button>
+                                        </form>
                                     </div>
                                 @empty
                                     <span class="badge bg-warning text-dark">Sin alumnos vinculados</span>
@@ -279,21 +286,18 @@
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Estudiante Representado</label>
-                                <select name="student_id" class="form-select @error('student_id') is-invalid @enderror" required>
-                                    <option value="">-- Seleccionar Alumno --</option>
-                                    @foreach($students as $student)
-                                        <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>{{ $student->nombre_completo }} ({{ $student->grupo->codigo_grupo }})</option>
-                                    @endforeach
+                                <select name="student_id" class="form-select @error('student_id') is-invalid @enderror" required {{ $students->isEmpty() ? 'disabled' : '' }}>
+                                    @if($students->isEmpty())
+                                        <option value="" disabled selected>-- No hay estudiantes sin tutor --</option>
+                                    @else
+                                        <option value="">-- Seleccionar Alumno --</option>
+                                        @foreach($students as $student)
+                                            <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>{{ $student->nombre_completo }} ({{ $student->grupo->codigo_grupo }})</option>
+                                        @endforeach
+                                    @endif
                                 </select>
+                                <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i> Solo se muestran alumnos que no tienen un tutor vinculado</small>
                             </div>
-                        </div>
-
-                        <div class="mb-3">
-                            <label class="form-label fw-semibold">Tipo de Contacto</label>
-                            <select name="is_primary_contact" class="form-select @error('is_primary_contact') is-invalid @enderror" required>
-                                <option value="1" {{ old('is_primary_contact') == '1' ? 'selected' : '' }}>Contacto Principal de Emergencia/Notificación</option>
-                                <option value="0" {{ old('is_primary_contact') == '0' ? 'selected' : '' }}>Contacto Secundario</option>
-                            </select>
                         </div>
 
                         <div class="p-3 bg-light border rounded">

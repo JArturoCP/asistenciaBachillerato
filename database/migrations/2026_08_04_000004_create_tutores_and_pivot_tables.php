@@ -22,7 +22,6 @@ return new class extends Migration
         Schema::create('estudiante_tutor', function (Blueprint $table) {
             $table->foreignId('estudiante_id')->constrained('estudiantes')->onDelete('cascade');
             $table->foreignId('tutor_id')->constrained('tutores')->onDelete('cascade');
-            $table->boolean('es_contacto_principal')->default(true);
             $table->timestamp('fecha_verificacion')->nullable();
             $table->timestamps();
             $table->primary(['estudiante_id', 'tutor_id']);

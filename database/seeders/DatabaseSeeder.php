@@ -160,7 +160,7 @@ class DatabaseSeeder extends Seeder
             ]);
 
             if ($idx < 2) {
-                $guardian1->estudiantes()->attach($student->id, ['es_contacto_principal' => true, 'fecha_verificacion' => now()]);
+                $guardian1->estudiantes()->attach($student->id, ['fecha_verificacion' => now()]);
                 Consentimiento::create([
                     'tutor_id' => $guardian1->id,
                     'estudiante_id' => $student->id,
@@ -169,7 +169,7 @@ class DatabaseSeeder extends Seeder
                     'fecha_otorgado' => now(),
                 ]);
             } elseif ($idx === 2) {
-                $guardian2->estudiantes()->attach($student->id, ['es_contacto_principal' => true, 'fecha_verificacion' => now()]);
+                $guardian2->estudiantes()->attach($student->id, ['fecha_verificacion' => now()]);
                 Consentimiento::create([
                     'tutor_id' => $guardian2->id,
                     'estudiante_id' => $student->id,

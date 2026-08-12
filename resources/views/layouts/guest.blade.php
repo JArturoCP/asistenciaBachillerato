@@ -26,7 +26,8 @@
                 --wine-main: #8B1B3D;
                 --wine-hover: #721430;
                 --wine-light: rgba(139, 27, 61, 0.08);
-                --bg-cream: #F5F1EA;
+                --bg-cream: #002F2A;
+                --bg-left-panel: #FAF8F5;
                 --text-dark: #2B2B2B;
             }
 
@@ -37,81 +38,103 @@
                 min-height: 100vh;
                 margin: 0;
                 padding: 0;
-                display: flex;
-                flex-direction: column;
             }
 
-            /* Header Section */
-            .auth-header-wrapper {
-                background: linear-gradient(180deg, #8B1B3D 0%, #701330 100%);
-                padding: 36px 20px 30px 20px;
+            .guest-container {
+                min-height: 100vh;
                 display: flex;
                 flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                text-align: center;
                 width: 100%;
-                box-sizing: border-box;
-                border-bottom: 3px solid rgba(0,0,0,0.08);
             }
 
-            .logo-box {
+            /* Desktop 50/50 Split Layout */
+            @media (min-width: 992px) {
+                .guest-container {
+                    flex-direction: row;
+                }
+
+                .guest-left {
+                    width: 50%;
+                    min-height: 100vh;
+                    background-color: var(--bg-left-panel);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 40px;
+                    border-right: 1px solid rgba(0, 0, 0, 0.06);
+                }
+
+                .guest-right {
+                    width: 50%;
+                    min-height: 100vh;
+                    background-color: var(--bg-cream);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    padding: 40px 24px;
+                }
+            }
+
+            /* Mobile & Tablet Layout (< 992px) */
+            @media (max-width: 991.98px) {
+                .guest-left {
+                    width: 100%;
+                    background-color: var(--bg-left-panel);
+                    padding: 32px 20px 24px 20px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+                }
+
+                .guest-right {
+                    width: 100%;
+                    flex: 1;
+                    padding: 28px 16px 40px 16px;
+                    display: flex;
+                    justify-content: center;
+                    align-items: flex-start;
+                    box-sizing: border-box;
+                }
+            }
+
+            /* Logo Wrapper */
+            .logo-wrapper {
                 background: #ffffff;
                 border-radius: 20px;
-                padding: 24px 28px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                padding: 28px 36px;
+                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
                 max-width: 440px;
-                width: calc(100% - 32px);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                margin: 0 auto;
-                box-sizing: border-box;
+                width: 100%;
+                text-align: center;
+                border: 1px solid rgba(0, 0, 0, 0.03);
             }
 
-            .logo-box img {
-                max-height: 175px;
+            .logo-img {
+                max-height: 200px;
                 width: auto;
                 max-width: 100%;
                 object-fit: contain;
-                display: block;
                 margin: 0 auto;
+                display: block;
             }
 
-            .auth-version {
-                font-size: 0.82rem;
-                color: rgba(255, 255, 255, 0.85);
-                margin-top: 14px;
-                letter-spacing: 0.5px;
-                font-weight: 400;
-            }
-
-            /* Content Section & Spacing */
-            .auth-content-wrapper {
-                flex: 1;
-                padding: 36px 16px 48px 16px;
-                display: flex;
-                justify-content: center;
-                align-items: flex-start;
-                width: 100%;
-                box-sizing: border-box;
-            }
-
+            /* Auth Card */
             .auth-card {
                 background: #ffffff;
                 color: var(--text-dark);
                 border-radius: 20px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+                box-shadow: 0 12px 35px rgba(0, 0, 0, 0.07);
                 width: 100%;
-                max-width: 440px;
-                padding: 32px 24px;
-                border: 1px solid rgba(0,0,0,0.04);
+                max-width: 450px;
+                padding: 36px 28px;
+                border: 1px solid rgba(0, 0, 0, 0.04);
                 box-sizing: border-box;
             }
 
             @media (min-width: 576px) {
                 .auth-card {
-                    padding: 40px 36px;
+                    padding: 44px 38px;
                 }
             }
 
@@ -127,7 +150,7 @@
             .btn-wine:hover, .btn-wine:focus, .btn-wine:active {
                 background-color: var(--wine-hover);
                 color: #ffffff;
-                box-shadow: 0 4px 12px rgba(139, 27, 61, 0.3);
+                box-shadow: 0 4px 12px rgba(139, 27, 61, 0.25);
             }
 
             .form-control:focus, .form-select:focus {
@@ -143,45 +166,49 @@
         </style>
     </head>
     <body>
-        <div class="auth-header-wrapper">
-            <div class="logo-box">
-                <img src="{{ asset('images/logo.png') }}" alt="SIGO Logo">
+        <div class="guest-container">
+            <!-- Left Side: Centered Logo -->
+            <div class="guest-left">
+                <div class="logo-wrapper">
+                    <img src="{{ asset('images/logo.png') }}" alt="SIGO Logo" class="logo-img">
+                </div>
             </div>
-        </div>
 
-        <div class="auth-content-wrapper">
-            <div class="auth-card">
-                @if(session('status'))
-                    <div class="alert alert-info alert-dismissible fade show small mb-3">
-                        <i class="bi bi-info-circle-fill me-1"></i> {{ session('status') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+            <!-- Right Side: Auth Card / Content -->
+            <div class="guest-right">
+                <div class="auth-card">
+                    @if(session('status'))
+                        <div class="alert alert-info alert-dismissible fade show small mb-3">
+                            <i class="bi bi-info-circle-fill me-1"></i> {{ session('status') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
-                @if(session('error'))
-                    <div class="alert alert-danger alert-dismissible fade show small mb-3">
-                        <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error') }}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+                    @if(session('error'))
+                        <div class="alert alert-danger alert-dismissible fade show small mb-3">
+                            <i class="bi bi-exclamation-triangle-fill me-1"></i> {{ session('error') }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
-                @if($errors->any())
-                    <div class="alert alert-danger alert-dismissible fade show small mb-3">
-                        <div class="fw-bold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i> Corrija los errores marcados:</div>
-                        <ul class="mb-0 ps-3">
-                            @foreach($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
-                        </ul>
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                @endif
+                    @if($errors->any())
+                        <div class="alert alert-danger alert-dismissible fade show small mb-3">
+                            <div class="fw-bold mb-1"><i class="bi bi-exclamation-circle-fill me-1"></i> Corrija los errores marcados:</div>
+                            <ul class="mb-0 ps-3">
+                                @foreach($errors->all() as $error)
+                                    <li>{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    @endif
 
-                @hasSection('content')
-                    @yield('content')
-                @else
-                    {{ $slot ?? '' }}
-                @endif
+                    @hasSection('content')
+                        @yield('content')
+                    @else
+                        {{ $slot ?? '' }}
+                    @endif
+                </div>
             </div>
         </div>
 

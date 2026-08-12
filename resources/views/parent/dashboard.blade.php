@@ -128,7 +128,8 @@
                             @csrf
                             <div class="mb-3">
                                 <label class="form-label fw-semibold">Correo de Notificación Instantánea</label>
-                                <input type="email" name="notification_email" class="form-control" value="{{ $guardian->correo_notificaciones ?? $guardian->user->email }}" required>
+                                <input type="email" class="form-control bg-light" value="{{ $guardian->correo_notificaciones ?? $guardian->user->email }}" readonly disabled>
+                                <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i> Para modificar la dirección de correo registrada acuda con la dirección escolar.</small>
                             </div>
                             <div class="mb-3">
                                 <div class="form-check form-switch">

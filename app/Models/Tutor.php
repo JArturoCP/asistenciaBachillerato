@@ -38,7 +38,7 @@ class Tutor extends Model
     public function estudiantes(): BelongsToMany
     {
         return $this->belongsToMany(Estudiante::class, 'estudiante_tutor', 'tutor_id', 'estudiante_id')
-                    ->withPivot('es_contacto_principal', 'fecha_verificacion')
+                    ->withPivot('fecha_verificacion')
                     ->withTimestamps();
     }
 

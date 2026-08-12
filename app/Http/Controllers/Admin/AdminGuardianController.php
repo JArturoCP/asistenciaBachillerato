@@ -19,7 +19,12 @@ class AdminGuardianController extends Controller
         $guardians = Tutor::whereHas('user', function ($q) {
             $q->where('is_approved', true);
         })->with(['user', 'estudiantes.user', 'consentimientos'])->get();
-        $students = Estudiante::with(['user', 'grupo'])->where('is_active', true)->get();
+
+        // Only fetch active students who currently DO NOT have any tutor linked
+        $students = Estudiante::with(['user', 'grupo'])
+            ->where('is_active', true)
+            ->doesntHave('tutores')
+            ->get();
 
         AuditLog::log('READ', 'tutores', null, 'Consulta de padres/tutores y consentimientos LFPDPPP');
 
@@ -141,7 +146,6 @@ class AdminGuardianController extends Controller
         $validated = $request->validate([
             'guardian_id' => 'required|exists:tutores,id',
             'student_id' => 'required|exists:estudiantes,id',
-            'is_primary_contact' => 'required|boolean',
             'consent_accepted' => 'required|accepted',
         ], [
             'guardian_id.required' => 'Debe seleccionar un padre o tutor.',
@@ -153,10 +157,16 @@ class AdminGuardianController extends Controller
         $guardian = Tutor::findOrFail($validated['guardian_id']);
         $student = Estudiante::findOrFail($validated['student_id']);
 
+        // Enforce strict 1-tutor-per-student rule: check if student is already assigned to another guardian
+        if ($student->tutores()->where('tutores.id', '!=', $guardian->id)->exists()) {
+            return back()->withInput()->withErrors([
+                'student_id' => "El estudiante {$student->nombre_completo} ya tiene un tutor vinculado y solo se permite 1 tutor por estudiante."
+            ]);
+        }
+
         // Attach student to guardian
         $guardian->estudiantes()->syncWithoutDetaching([
             $student->id => [
-                'es_contacto_principal' => $validated['is_primary_contact'],
                 'fecha_verificacion' => now(),
             ]
         ]);
@@ -174,5 +184,14 @@ class AdminGuardianController extends Controller
         AuditLog::log('WRITE', 'consentimientos', null, "Consentimiento LFPDPPP registrado para tutor ID {$guardian->id} y estudiante {$student->nombre_completo}");
 
         return redirect()->route('admin.guardians.index')->with('success', "Vinculación y Consentimiento LFPDPPP registrados correctamente.");
+    }
+
+    public function unlinkStudent(Tutor $guardian, Estudiante $student)
+    {
+        $guardian->estudiantes()->detach($student->id);
+
+        AuditLog::log('WRITE', 'tutores', $guardian->id, "Estudiante {$student->nombre_completo} desvinculado del tutor {$guardian->user->nombre_completo}");
+
+        return redirect()->route('admin.guardians.index')->with('success', "Estudiante {$student->nombre_completo} desvinculado del tutor correctamente.");
     }
 }

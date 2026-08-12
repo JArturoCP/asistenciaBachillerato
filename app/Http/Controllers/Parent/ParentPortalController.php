@@ -99,18 +99,8 @@ class ParentPortalController extends Controller
         $user = auth()->user();
         $guardian = Tutor::where('user_id', $user->id)->firstOrFail();
 
-        $validated = $request->validate([
-            'notification_email' => 'required|email',
-            'email_alerts_enabled' => 'required|boolean',
-        ], [
-            'notification_email.required' => 'El correo electrónico para notificaciones es obligatorio.',
-            'notification_email.email' => 'Ingrese una dirección de correo válida.',
-            'email_alerts_enabled.required' => 'Debe indicar si desea activar las alertas por correo.',
-        ]);
-
         $guardian->update([
-            'correo_notificaciones' => $validated['notification_email'],
-            'alertas_correo_activadas' => $validated['email_alerts_enabled'],
+            'alertas_correo_activadas' => $request->has('email_alerts_enabled'),
         ]);
 
         AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor actualizó preferencias de notificaciones por correo");

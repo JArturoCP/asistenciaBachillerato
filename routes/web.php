@@ -76,6 +76,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::put('guardians/{guardian}', [AdminGuardianController::class, 'updateGuardian'])->name('guardians.updateGuardian');
     Route::delete('guardians/{guardian}', [AdminGuardianController::class, 'destroyGuardian'])->name('guardians.destroyGuardian');
     Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
+    Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
 });
 
 require __DIR__.'/auth.php';

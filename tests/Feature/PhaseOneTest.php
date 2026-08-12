@@ -149,7 +149,6 @@ class PhaseOneTest extends TestCase
         $response = $this->actingAs($admin)->post(route('admin.guardians.linkStudent'), [
             'guardian_id' => $guardian->id,
             'student_id' => $student->id,
-            'is_primary_contact' => 1,
             'consent_accepted' => 1,
         ]);
 

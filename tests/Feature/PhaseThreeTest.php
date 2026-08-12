@@ -79,14 +79,13 @@ class PhaseThreeTest extends TestCase
         $parentUser = User::where('role', 'parent')->first();
 
         $response = $this->actingAs($parentUser)->post(route('parent.alerts.update'), [
-            'notification_email' => 'tutor_actualizado@gmail.com',
             'email_alerts_enabled' => 1,
         ]);
 
         $response->assertRedirect();
         $this->assertDatabaseHas('tutores', [
             'user_id' => $parentUser->id,
-            'correo_notificaciones' => 'tutor_actualizado@gmail.com',
+            'alertas_correo_activadas' => true,
         ]);
     }
 
