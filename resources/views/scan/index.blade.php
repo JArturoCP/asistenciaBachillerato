@@ -115,7 +115,7 @@
     <header class="kiosk-header py-3 px-4 mb-4">
         <div class="container-fluid d-flex justify-content-between align-items-center">
             <div class="d-flex align-items-center">
-                <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm me-3" title="Volver al Dashboard">
+                <a href="{{ route('teacher.attendance.index') }}" class="btn btn-outline-light btn-sm me-3" title="Volver al control de asistencia de profesores">
                     <i class="bi bi-arrow-left"></i>
                 </a>
                 <i class="bi bi-qr-code-scan text-warning fs-3 me-2"></i>
