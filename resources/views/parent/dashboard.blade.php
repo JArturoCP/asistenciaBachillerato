@@ -123,18 +123,26 @@
             <div class="row g-4">
                 <div class="col-md-6">
                     <div class="card card-custom p-4 bg-white h-100">
-                        <h5 class="fw-bold mb-3"><i class="bi bi-envelope-at text-info me-2"></i> Configuración de Alertas por Correo</h5>
+                        <h5 class="fw-bold mb-3"><i class="bi bi-bell-fill text-info me-2"></i> Configuración de Alertas Instantáneas</h5>
                         <form action="{{ route('parent.alerts.update') }}" method="POST">
                             @csrf
                             <div class="mb-3">
-                                <label class="form-label fw-semibold">Correo de Notificación Instantánea</label>
+                                <label class="form-label fw-semibold">Correo de Notificación</label>
                                 <input type="email" class="form-control bg-light" value="{{ $guardian->correo_notificaciones ?? $guardian->user->email }}" readonly disabled>
-                                <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i> Para modificar la dirección de correo registrada acuda con la dirección escolar.</small>
                             </div>
                             <div class="mb-3">
+                                <label class="form-label fw-semibold">Teléfono para WhatsApp</label>
+                                <input type="text" class="form-control bg-light" value="{{ $guardian->telefono ?? $guardian->user->phone ?? 'Sin teléfono registrado' }}" readonly disabled>
+                                <small class="text-muted d-block mt-1"><i class="bi bi-info-circle me-1"></i> Para actualizar correo o teléfono acuda a la dirección escolar.</small>
+                            </div>
+                            <div class="mb-3">
+                                <div class="form-check form-switch mb-2">
+                                    <input class="form-check-input" type="checkbox" name="email_alerts_enabled" value="1" id="emailAlertSwitch" {{ ($guardian->alertas_correo_activadas ?? true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="emailAlertSwitch"><i class="bi bi-envelope me-1"></i> Alertas por Correo Electrónico</label>
+                                </div>
                                 <div class="form-check form-switch">
-                                    <input class="form-check-input" type="checkbox" name="email_alerts_enabled" value="1" id="alertSwitch" {{ ($guardian->alertas_correo_activadas ?? true) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="alertSwitch">Recibir correo electrónico inmediato cuando mi hijo(a) escanee su entrada/salida</label>
+                                    <input class="form-check-input" type="checkbox" name="whatsapp_alerts_enabled" value="1" id="whatsappAlertSwitch" {{ ($guardian->alertas_whatsapp_activadas ?? true) ? 'checked' : '' }}>
+                                    <label class="form-check-label fw-semibold" for="whatsappAlertSwitch"><i class="bi bi-whatsapp text-success me-1"></i> Alertas por WhatsApp (UltraMsg)</label>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-info text-white btn-sm fw-semibold">Guardar Preferencias</button>

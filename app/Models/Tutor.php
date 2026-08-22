@@ -21,12 +21,14 @@ class Tutor extends Model
         'telefono',
         'correo_notificaciones',
         'alertas_correo_activadas',
+        'alertas_whatsapp_activadas',
     ];
 
     protected function casts(): array
     {
         return [
             'alertas_correo_activadas' => 'boolean',
+            'alertas_whatsapp_activadas' => 'boolean',
         ];
     }
 

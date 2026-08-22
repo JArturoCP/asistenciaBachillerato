@@ -6,6 +6,7 @@ use App\Models\Estudiante;
 use App\Models\Asistencia;
 use App\Models\AuditLog;
 use App\Mail\AttendanceRecordedMail;
+use App\Jobs\SendWhatsAppNotificationJob;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Carbon\Carbon;
@@ -87,6 +88,7 @@ class ScanController extends Controller
                 AuditLog::log('WRITE', 'asistencias', $attendance->id, "Registro de SALIDA para estudiante: {$student->nombre_completo}");
 
                 $this->sendEmailNotification($student, $attendance);
+                $this->sendWhatsAppNotification($student, $attendance, 'salida');
 
                 return response()->json([
                     'status' => 'info',
@@ -141,6 +143,7 @@ class ScanController extends Controller
         AuditLog::log('WRITE', 'asistencias', $attendance->id, "Registro de ENTRADA ({$attendanceStatus}) para estudiante: {$student->nombre_completo}");
 
         $this->sendEmailNotification($student, $attendance);
+        $this->sendWhatsAppNotification($student, $attendance, 'entrada');
 
         return response()->json([
             'status' => $isLate ? 'warning' : 'success',
@@ -171,6 +174,38 @@ class ScanController extends Controller
             }
         } catch (\Throwable $e) {
             logger()->error("Error enviando correo de asistencia: " . $e->getMessage());
+        }
+    }
+
+    private function sendWhatsAppNotification(Estudiante $student, Asistencia $attendance, string $type): void
+    {
+        try {
+            foreach ($student->tutores as $guardian) {
+                $whatsappEnabled = $guardian->alertas_whatsapp_activadas ?? true;
+                $phone = $guardian->telefono ?? $guardian->user?->phone;
+
+                if ($whatsappEnabled && !empty($phone)) {
+                    $tutorName = $guardian->user?->nombre_completo ?? 'Tutor';
+                    $studentName = $student->nombre_completo;
+                    $group = $student->grupo->codigo_grupo ?? 'N/A';
+                    $date = Carbon::parse($attendance->fecha)->format('d/m/Y');
+                    $time = $type === 'salida' ? $attendance->hora_salida : $attendance->hora_entrada;
+
+                    if ($type === 'salida') {
+                        $message = "🏫 *SIGO Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *SALIDA* del plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
+                    } else {
+                        $statusText = $attendance->estado === 'retardo' ? 'ENTRADA CON RETARDO' : 'ENTRADA';
+                        $message = "🏫 *SIGO Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *{$statusText}* en el plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
+                    }
+
+                    // Dispatch job with random delay (between 3 and 15 seconds) to avoid rate-limiting/blocking
+                    $delaySeconds = rand(3, 15);
+                    SendWhatsAppNotificationJob::dispatch($phone, $message)
+                        ->delay(now()->addSeconds($delaySeconds));
+                }
+            }
+        } catch (\Throwable $e) {
+            logger()->error("Error en sendWhatsAppNotification: " . $e->getMessage());
         }
     }
 }

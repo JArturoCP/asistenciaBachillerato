@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\AdminPendingRegistrationController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
+use App\Http\Controllers\WhatsAppController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -78,5 +79,9 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
     Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
 });
+
+// WhatsApp Route
+Route::get('/whats', [WhatsAppController::class, 'index']);
+Route::post('whatsapp', [WhatsAppController::class, 'store']);
 
 require __DIR__.'/auth.php';

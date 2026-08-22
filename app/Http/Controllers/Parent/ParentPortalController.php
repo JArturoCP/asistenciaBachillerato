@@ -101,11 +101,12 @@ class ParentPortalController extends Controller
 
         $guardian->update([
             'alertas_correo_activadas' => $request->has('email_alerts_enabled'),
+            'alertas_whatsapp_activadas' => $request->has('whatsapp_alerts_enabled'),
         ]);
 
-        AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor actualizó preferencias de notificaciones por correo");
+        AuditLog::log('WRITE', 'tutores', $guardian->id, "Tutor actualizó preferencias de notificaciones por correo y WhatsApp");
 
-        return redirect()->back()->with('success', 'Preferencias de notificaciones por correo actualizadas.');
+        return redirect()->back()->with('success', 'Preferencias de notificaciones de asistencia actualizadas.');
     }
 
     public function submitArcoRequest(Request $request)
