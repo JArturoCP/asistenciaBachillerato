@@ -23,7 +23,7 @@
         <div class="d-flex align-items-center">
             <i class="bi bi-shield-lock-fill text-success fs-3 me-3"></i>
             <div>
-                <h6 class="fw-bold mb-1">Cumplimiento Normativo LFPDPPP (Escuela Privada México)</h6>
+                <h6 class="fw-bold mb-1">Cumplimiento Normativo LFPDPPP</h6>
                 <p class="mb-0 small text-muted">
                     Al ser los estudiantes en su mayoría menores de edad, el tratamiento de sus datos personales requiere el consentimiento expreso e informado del padre o tutor legal mediante el Aviso de Privacidad.
                 </p>

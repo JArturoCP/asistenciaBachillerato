@@ -20,7 +20,7 @@
 <body>
     <div class="email-container">
         <div class="header">
-            <h2>Escuela Bachillerato Oficial</h2>
+            <h2>Escuela Preparatoria Oficial número 112</h2>
             <div style="font-size: 13px; color: #cbd5e1;">Sistema de Control de Asistencia Escolar</div>
         </div>
 

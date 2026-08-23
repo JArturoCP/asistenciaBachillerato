@@ -80,8 +80,5 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
 });
 
-// WhatsApp Route
-Route::get('/whats', [WhatsAppController::class, 'index']);
-Route::post('whatsapp', [WhatsAppController::class, 'store']);
 
 require __DIR__.'/auth.php';

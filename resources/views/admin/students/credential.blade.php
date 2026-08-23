@@ -225,7 +225,7 @@
             <div class="mb-2">
                 <img src="{{ asset('images/logo_escuela2.jpeg') }}" alt="Logo Escuela" class="school-logo">
             </div>
-            <div class="text-uppercase header-school-name">Escuela Bachillerato Oficial</div>
+            <div class="text-uppercase header-school-name">Escuela Preparatoria Oficial número 112</div>
             <h6 class="mb-0 header-title">Credencial Estudiantil</h6>
             <span class="header-cycle">Ciclo Escolar {{ $student->grupo->ciclo_escolar }}</span>
         </div>

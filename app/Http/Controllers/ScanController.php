@@ -192,10 +192,10 @@ class ScanController extends Controller
                     $time = $type === 'salida' ? $attendance->hora_salida : $attendance->hora_entrada;
 
                     if ($type === 'salida') {
-                        $message = "🏫 *SIGO Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *SALIDA* del plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
+                        $message = "🏫 *SIGO 112 Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *SALIDA* del plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
                     } else {
                         $statusText = $attendance->estado === 'retardo' ? 'ENTRADA CON RETARDO' : 'ENTRADA';
-                        $message = "🏫 *SIGO Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *{$statusText}* en el plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
+                        $message = "🏫 *SIGO 112 Alerta Escolar*\n\nHola {$tutorName},\nLe informamos que su hijo(a) *{$studentName}* (Grupo {$group}) ha registrado su *{$statusText}* en el plantel hoy {$date} a las {$time} hrs.\n\n_Control de Asistencia Escolar_";
                     }
 
                     // Dispatch job with random delay (between 3 and 15 seconds) to avoid rate-limiting/blocking
