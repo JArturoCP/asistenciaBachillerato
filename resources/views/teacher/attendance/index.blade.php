@@ -23,10 +23,10 @@
                 <select name="schedule_id" class="form-select" onchange="this.form.submit()">
                     @forelse($classSchedules as $sched)
                         <option value="{{ $sched->id }}" {{ $selectedScheduleId == $sched->id ? 'selected' : '' }}>
-                            📚 Grupo {{ $sched->grupo?->codigo_grupo }} — {{ $sched->materia?->nombre }} | {{ ucfirst($sched->dia_semana) }} ({{ substr($sched->hora_inicio, 0, 5) }} - {{ substr($sched->hora_fin, 0, 5) }}) {{ $sched->aula ? '['.$sched->aula.']' : '' }}
+                            📚 Grupo {{ $sched->grupo?->codigo_grupo }} — {{ $sched->materia?->nombre }} | {{ ucfirst($sched->dia_semana) }} ({{ substr($sched->hora_inicio, 0, 5) }} - {{ substr($sched->hora_fin, 0, 5) }}) {{ $sched->aula ? '['.$sched->aula.']' : '' }} {{ $sched->docente?->nombre_completo ? '— Prof. '.$sched->docente->nombre_completo : '' }}
                         </option>
                     @empty
-                        <option value="">No tiene materias ni horarios asignados</option>
+                        <option value="">No hay clases asignadas para este día de la semana</option>
                     @endforelse
                 </select>
             </div>
@@ -198,7 +198,7 @@
         </div>
     @else
         <div class="alert alert-warning card-custom text-center py-4">
-            <i class="bi bi-exclamation-triangle fs-3 d-block mb-2"></i> No tiene materias ni horarios asignados en el ciclo escolar actual.
+            <i class="bi bi-calendar-x fs-3 d-block mb-2"></i> No tiene clases ni horarios asignados para el día seleccionado ({{ \Carbon\Carbon::parse($date)->format('d/m/Y') }}).
         </div>
     @endif
 @endsection

@@ -51,7 +51,7 @@
         </div>
 
         <div class="footer">
-            Usted recibe esta notificación automática en cumplimiento de las finalidades primarias del Aviso de Privacidad LFPDPPP autorizado para el seguimiento de la seguridad del menor.
+            Usted recibe esta notificación del Sistema de Control de Asistencia Escolar gracias a <a href="https://bitbr.io">bitbr.io</a>.
         </div>
     </div>
 </body>

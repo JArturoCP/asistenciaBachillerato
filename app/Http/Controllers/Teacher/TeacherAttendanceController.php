@@ -19,47 +19,48 @@ class TeacherAttendanceController extends Controller
         $user = auth()->user();
 
         // 1. Get assigned class schedules for teacher (or all if admin)
-        $query = DocenteGrupo::with(['grupo', 'materia']);
+        $query = DocenteGrupo::with(['grupo', 'materia', 'docente']);
 
         if (!$user->isAdmin()) {
             $query->where('docente_id', $user->id);
         }
 
-        $classSchedules = $query->get()->sort(function ($a, $b) {
-            $dayOrder = ['lunes' => 1, 'martes' => 2, 'miercoles' => 3, 'jueves' => 4, 'viernes' => 5, 'sabado' => 6];
-            
+        $allSchedules = $query->get();
+
+        // 2. Date selected by user (defaults to today)
+        $refDateInput = $request->input('date');
+        $carbonDate = $refDateInput ? Carbon::parse($refDateInput, 'America/Mexico_City') : Carbon::today('America/Mexico_City');
+        $date = $carbonDate->format('Y-m-d');
+
+        // Map Carbon dayOfWeek (0 = Domingo, 1 = Lunes, ...) to Spanish string as stored in DB
+        $daysMap = [
+            1 => 'lunes',
+            2 => 'martes',
+            3 => 'miercoles',
+            4 => 'jueves',
+            5 => 'viernes',
+            6 => 'sabado',
+            0 => 'domingo',
+        ];
+
+        $dayOfWeekName = $daysMap[$carbonDate->dayOfWeek] ?? 'lunes';
+
+        // 3. Filter schedules for the day of the week of the selected date
+        $classSchedules = $allSchedules->filter(function ($sched) use ($dayOfWeekName) {
+            return strtolower($sched->dia_semana) === $dayOfWeekName;
+        })->sort(function ($a, $b) {
             $groupComp = strcmp($a->grupo->codigo_grupo ?? '', $b->grupo->codigo_grupo ?? '');
             if ($groupComp !== 0) return $groupComp;
-
-            $dayA = $dayOrder[$a->dia_semana] ?? 7;
-            $dayB = $dayOrder[$b->dia_semana] ?? 7;
-            if ($dayA !== $dayB) return $dayA <=> $dayB;
-
             return strcmp($a->hora_inicio ?? '', $b->hora_inicio ?? '');
         });
 
-        // 2. Selected schedule (default to first assigned class)
+        // 4. Selected schedule (default to first assigned class for that day)
         $selectedScheduleId = $request->input('schedule_id', $classSchedules->first()?->id);
         $selectedSchedule = $classSchedules->firstWhere('id', $selectedScheduleId);
 
-        // 3. Map day of week to offset from Monday (Lunes = 0, ..., Sabado = 5)
-        $dayOffsetMap = [
-            'lunes' => 0,
-            'martes' => 1,
-            'miercoles' => 2,
-            'jueves' => 3,
-            'viernes' => 4,
-            'sabado' => 5,
-        ];
-
-        $refDateInput = $request->input('date');
-        $baseDate = $refDateInput ? Carbon::parse($refDateInput, 'America/Mexico_City') : Carbon::today('America/Mexico_City');
-
-        if ($selectedSchedule && isset($dayOffsetMap[strtolower($selectedSchedule->dia_semana)])) {
-            $offset = $dayOffsetMap[strtolower($selectedSchedule->dia_semana)];
-            $date = $baseDate->copy()->startOfWeek()->addDays($offset)->format('Y-m-d');
-        } else {
-            $date = $baseDate->format('Y-m-d');
+        if (!$selectedSchedule && $classSchedules->isNotEmpty()) {
+            $selectedSchedule = $classSchedules->first();
+            $selectedScheduleId = $selectedSchedule->id;
         }
 
         $selectedGroup = $selectedSchedule?->grupo;
@@ -164,32 +165,16 @@ class TeacherAttendanceController extends Controller
         $groupId = $request->input('group_id');
         $dateInput = $request->input('date');
 
-        $dayOffsetMap = [
-            'lunes' => 0,
-            'martes' => 1,
-            'miercoles' => 2,
-            'jueves' => 3,
-            'viernes' => 4,
-            'sabado' => 5,
-        ];
-
         $refDate = $dateInput ? Carbon::parse($dateInput, 'America/Mexico_City') : Carbon::today('America/Mexico_City');
+        $date = $refDate->format('Y-m-d');
 
         if ($scheduleId) {
             $schedule = DocenteGrupo::with(['grupo', 'materia'])->findOrFail($scheduleId);
             $group = $schedule->grupo;
             $materiaClave = $schedule->materia?->clave ?? 'MATERIA';
-
-            if (isset($dayOffsetMap[strtolower($schedule->dia_semana)])) {
-                $offset = $dayOffsetMap[strtolower($schedule->dia_semana)];
-                $date = $refDate->copy()->startOfWeek()->addDays($offset)->format('Y-m-d');
-            } else {
-                $date = $refDate->format('Y-m-d');
-            }
         } else {
             $group = Grupo::findOrFail($groupId);
             $materiaClave = 'GRUPO';
-            $date = $refDate->format('Y-m-d');
         }
 
         $students = Estudiante::with('user')

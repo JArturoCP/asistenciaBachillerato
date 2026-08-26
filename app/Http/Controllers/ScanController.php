@@ -57,7 +57,7 @@ class ScanController extends Controller
             ->whereDate('fecha', $today)
             ->first();
 
-        // Anti-duplicate / Debounce logic (5 minutes)
+        // Anti-duplicate / Debounce logic & Departure time rules
         if ($attendance && $attendance->hora_entrada) {
             $checkInDateTime = Carbon::parse($attendance->fecha->format('Y-m-d') . ' ' . $attendance->hora_entrada, 'America/Mexico_City');
             
@@ -79,7 +79,26 @@ class ScanController extends Controller
                 ], 422);
             }
 
-            // If already checked in and 5+ minutes passed, register Check-Out (Salida)
+            // Check-out (Salida) is only allowed starting at 08:50 AM
+            $checkoutAllowedTime = Carbon::createFromTime(8, 50, 0, 'America/Mexico_City');
+            if ($now->lessThan($checkoutAllowedTime) && !$attendance->hora_salida) {
+                return response()->json([
+                    'status' => 'warning',
+                    'title' => 'Salida No Permitida Aún',
+                    'message' => "El registro de salidas está permitido a partir de las 08:50 AM. La entrada de {$student->nombre_completo} ya fue registrada a las {$attendance->hora_entrada}.",
+                    'student' => [
+                        'name' => $student->nombre_completo,
+                        'matricula' => $student->matricula,
+                        'group' => $student->grupo->codigo_grupo,
+                    ],
+                    'attendance' => [
+                        'check_in' => $attendance->hora_entrada,
+                        'status' => $attendance->estado,
+                    ]
+                ], 422);
+            }
+
+            // If already checked in and 08:50 AM or later, register Check-Out (Salida)
             if (!$attendance->hora_salida) {
                 $attendance->update([
                     'hora_salida' => $now->format('H:i:s'),
@@ -127,8 +146,8 @@ class ScanController extends Controller
         }
 
         // 3. Register Check-In (Entrada)
-        // Late arrival threshold: 07:15:00 AM
-        $lateThreshold = Carbon::createFromTime(7, 15, 0, 'America/Mexico_City');
+        // Punctual entry threshold: up to 08:00:00 AM. After 08:00:00 AM is late (retardo).
+        $lateThreshold = Carbon::createFromTime(8, 0, 0, 'America/Mexico_City');
         $isLate = $now->greaterThan($lateThreshold);
         $attendanceStatus = $isLate ? 'retardo' : 'presente';
 
