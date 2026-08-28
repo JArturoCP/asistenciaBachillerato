@@ -60,8 +60,9 @@
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    padding: 40px;
+                    padding: 0;
                     border-right: 1px solid rgba(0, 0, 0, 0.06);
+                    overflow: hidden;
                 }
 
                 .guest-right {
@@ -80,11 +81,12 @@
                 .guest-left {
                     width: 100%;
                     background-color: var(--bg-left-panel);
-                    padding: 32px 20px 24px 20px;
+                    padding: 0;
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+                    overflow: hidden;
                 }
 
                 .guest-right {
@@ -98,25 +100,36 @@
                 }
             }
 
-            /* Logo Wrapper */
-            .logo-wrapper {
-                background: #ffffff;
-                border-radius: 20px;
-                padding: 28px 36px;
-                box-shadow: 0 10px 30px rgba(0, 0, 0, 0.06);
-                max-width: 440px;
+            /* Logo Container & Image */
+            .logo-container {
                 width: 100%;
-                text-align: center;
-                border: 1px solid rgba(0, 0, 0, 0.03);
+                height: 100%;
+                min-height: 100vh;
+                display: flex;
+                justify-content: center;
+                align-items: center;
             }
 
             .logo-img {
-                max-height: 200px;
-                width: auto;
+                width: 100%;
+                height: 100%;
                 max-width: 100%;
+                max-height: 100vh;
                 object-fit: contain;
-                margin: 0 auto;
                 display: block;
+            }
+
+            @media (max-width: 991.98px) {
+                .logo-container {
+                    min-height: 250px;
+                }
+
+                .logo-img {
+                    width: 100%;
+                    height: 100%;
+                    max-width: 100%;
+                    max-height: 350px;
+                }
             }
 
             /* Auth Card */
@@ -169,8 +182,8 @@
         <div class="guest-container">
             <!-- Left Side: Centered Logo -->
             <div class="guest-left">
-                <div class="logo-wrapper">
-                    <img src="{{ asset('images/logo.png') }}" alt="SIGO Logo" class="logo-img">
+                <div class="logo-container">
+                    <img src="{{ asset('images/logo_nuevo.jpeg') }}" alt="SIGO Logo" class="logo-img">
                 </div>
             </div>
 
