@@ -15,6 +15,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
+        'uuid',
         'name',
         'nombre',
         'apellido_paterno',
@@ -42,6 +43,12 @@ class User extends Authenticatable
 
     protected static function booted(): void
     {
+        static::creating(function ($user) {
+            if (empty($user->uuid)) {
+                $user->uuid = (string) \Illuminate\Support\Str::uuid();
+            }
+        });
+
         static::saving(function ($user) {
             if ($user->isDirty('name') && !$user->isDirty('nombre')) {
                 $parts = explode(' ', trim($user->name), 3);
@@ -112,5 +119,10 @@ class User extends Authenticatable
     public function docenteGrupos(): HasMany
     {
         return $this->hasMany(DocenteGrupo::class, 'docente_id');
+    }
+
+    public function asistenciasDocente(): HasMany
+    {
+        return $this->hasMany(AsistenciaDocente::class, 'docente_id');
     }
 }

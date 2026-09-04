@@ -208,4 +208,20 @@ class AdminTeacherController extends Controller
 
         return redirect()->route('admin.teachers.index')->with('success', "Asignación de {$materiaNombre} eliminada.");
     }
+
+    public function showCredential(User $teacher)
+    {
+        $teacher->load(['docenteGrupos.grupo', 'docenteGrupos.materia']);
+
+        if (empty($teacher->uuid)) {
+            $teacher->uuid = (string) \Illuminate\Support\Str::uuid();
+            $teacher->save();
+        }
+
+        $qrCodeSvg = \SimpleSoftwareIO\QrCode\Facades\QrCode::size(85)->margin(1)->generate($teacher->uuid);
+
+        AuditLog::log('READ', 'users', $teacher->id, "Generación de credencial QR para docente: {$teacher->nombre_completo}");
+
+        return view('admin.teachers.credential', compact('teacher', 'qrCodeSvg'));
+    }
 }

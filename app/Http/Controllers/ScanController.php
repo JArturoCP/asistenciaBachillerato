@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Estudiante;
 use App\Models\Asistencia;
+use App\Models\AsistenciaDocente;
+use App\Models\User;
 use App\Models\AuditLog;
 use App\Mail\AttendanceRecordedMail;
 use App\Jobs\SendWhatsAppNotificationJob;
@@ -44,11 +46,26 @@ class ScanController extends Controller
             })->first();
 
         if (!$student) {
+            // Check if QR code matches a Teacher user
+            $teacher = User::whereIn('role', ['teacher', 'docente'])
+                ->where('is_approved', true)
+                ->where(function ($q) use ($qrCode) {
+                    $q->where('uuid', $qrCode)
+                      ->orWhere('id', $qrCode)
+                      ->orWhere('email', $qrCode)
+                      ->orWhere('phone', $qrCode)
+                      ->orWhere('name', $qrCode);
+                })->first();
+
+            if ($teacher) {
+                return $this->processTeacherAttendance($teacher, $request, $now, $today);
+            }
+
             AuditLog::log('READ', 'estudiantes', null, "Intento de escaneo con código no reconocido: {$qrCode}");
             return response()->json([
                 'status' => 'error',
                 'title' => 'Código no Reconocido',
-                'message' => 'El código QR no corresponde a ningún estudiante activo en el sistema.',
+                'message' => 'El código QR no corresponde a ningún estudiante ni docente activo en el sistema.',
             ], 404);
         }
 
@@ -226,5 +243,124 @@ class ScanController extends Controller
         } catch (\Throwable $e) {
             logger()->error("Error en sendWhatsAppNotification: " . $e->getMessage());
         }
+    }
+
+    private function processTeacherAttendance(User $teacher, Request $request, Carbon $now, Carbon $today)
+    {
+        $attendance = AsistenciaDocente::where('docente_id', $teacher->id)
+            ->whereDate('fecha', $today)
+            ->first();
+
+        if ($attendance && $attendance->hora_entrada) {
+            $checkInDateTime = Carbon::parse($attendance->fecha->format('Y-m-d') . ' ' . $attendance->hora_entrada, 'America/Mexico_City');
+            
+            if ($checkInDateTime->diffInMinutes($now) < 5 && !$attendance->hora_salida) {
+                return response()->json([
+                    'status' => 'warning',
+                    'title' => 'Escaneo Duplicado (Docente)',
+                    'message' => "La entrada de la/del docente {$teacher->nombre_completo} ya fue registrada hace menos de 5 minutos ({$attendance->hora_entrada}).",
+                    'student' => [
+                        'name' => "Docente: {$teacher->nombre_completo}",
+                        'matricula' => "DOC-{$teacher->id}",
+                        'group' => 'Personal Docente',
+                    ],
+                    'attendance' => [
+                        'check_in' => $attendance->hora_entrada,
+                        'status' => $attendance->estado,
+                    ]
+                ], 422);
+            }
+
+            $checkoutAllowedTime = Carbon::createFromTime(8, 50, 0, 'America/Mexico_City');
+            if ($now->lessThan($checkoutAllowedTime) && !$attendance->hora_salida) {
+                return response()->json([
+                    'status' => 'warning',
+                    'title' => 'Salida No Permitida Aún',
+                    'message' => "El registro de salidas para docentes está permitido a partir de las 08:50 AM. La entrada de {$teacher->nombre_completo} fue registrada a las {$attendance->hora_entrada}.",
+                    'student' => [
+                        'name' => "Docente: {$teacher->nombre_completo}",
+                        'matricula' => "DOC-{$teacher->id}",
+                        'group' => 'Personal Docente',
+                    ],
+                    'attendance' => [
+                        'check_in' => $attendance->hora_entrada,
+                        'status' => $attendance->estado,
+                    ]
+                ], 422);
+            }
+
+            if (!$attendance->hora_salida) {
+                $attendance->update([
+                    'hora_salida' => $now->format('H:i:s'),
+                ]);
+
+                AuditLog::log('WRITE', 'asistencias_docentes', $attendance->id, "Registro de SALIDA para docente: {$teacher->nombre_completo}");
+
+                return response()->json([
+                    'status' => 'info',
+                    'title' => 'Salida Registrada (Docente)',
+                    'message' => "Salida registrada correctamente para la/del docente {$teacher->nombre_completo} a las {$now->format('H:i:s')} hrs.",
+                    'student' => [
+                        'name' => "Docente: {$teacher->nombre_completo}",
+                        'matricula' => "DOC-{$teacher->id}",
+                        'group' => 'Personal Docente',
+                    ],
+                    'attendance' => [
+                        'type' => 'checkout',
+                        'check_in' => $attendance->hora_entrada,
+                        'check_out' => $attendance->hora_salida,
+                        'status' => $attendance->estado,
+                    ]
+                ]);
+            }
+
+            return response()->json([
+                'status' => 'warning',
+                'title' => 'Entrada y Salida Ya Registradas',
+                'message' => "La/El docente {$teacher->nombre_completo} ya cuenta con registro completo de entrada y salida hoy.",
+                'student' => [
+                    'name' => "Docente: {$teacher->nombre_completo}",
+                    'matricula' => "DOC-{$teacher->id}",
+                    'group' => 'Personal Docente',
+                ],
+                'attendance' => [
+                    'check_in' => $attendance->hora_entrada,
+                    'check_out' => $attendance->hora_salida,
+                    'status' => $attendance->estado,
+                ]
+            ], 422);
+        }
+
+        $lateThreshold = Carbon::createFromTime(8, 0, 0, 'America/Mexico_City');
+        $isLate = $now->greaterThan($lateThreshold);
+        $attendanceStatus = $isLate ? 'retardo' : 'presente';
+
+        $attendance = AsistenciaDocente::create([
+            'docente_id' => $teacher->id,
+            'fecha' => $today->format('Y-m-d'),
+            'hora_entrada' => $now->format('H:i:s'),
+            'estado' => $attendanceStatus,
+            'metodo_escaneo' => $request->scan_method,
+        ]);
+
+        AuditLog::log('WRITE', 'asistencias_docentes', $attendance->id, "Registro de ENTRADA ({$attendanceStatus}) para docente: {$teacher->nombre_completo}");
+
+        return response()->json([
+            'status' => $isLate ? 'warning' : 'success',
+            'title' => $isLate ? 'Entrada Registrada (RETARDO Docente)' : 'Entrada Registrada (Docente)',
+            'message' => $isLate 
+                ? "Entrada registrada con retardo a las {$now->format('H:i:s')} para la/del docente {$teacher->nombre_completo}."
+                : "Entrada a tiempo registrada a las {$now->format('H:i:s')} para la/del docente {$teacher->nombre_completo}.",
+            'student' => [
+                'name' => "Docente: {$teacher->nombre_completo}",
+                'matricula' => "DOC-{$teacher->id}",
+                'group' => 'Personal Docente',
+            ],
+            'attendance' => [
+                'type' => 'checkin',
+                'check_in' => $attendance->hora_entrada,
+                'status' => $attendance->estado,
+            ]
+        ]);
     }
 }

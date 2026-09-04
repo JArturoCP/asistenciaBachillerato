@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credencial Estudiantil - {{ $student->nombre_completo }}</title>
+    <title>Credencial Docente - {{ $teacher->nombre_completo }}</title>
     <!-- Bootstrap 5.3 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -146,12 +146,6 @@
             color: #B8860B;
         }
 
-        .header-cycle {
-            color: #64748b;
-            font-size: 0.38rem;
-            display: block;
-        }
-
         .header-divider-gold {
             height: 1.5px;
             background: linear-gradient(90deg, #70122B 0%, #D4AF37 50%, #70122B 100%);
@@ -170,19 +164,10 @@
             background: #ffffff;
         }
 
-        .student-photo {
-            width: 44px;
-            height: 44px;
-            object-fit: cover;
-            border-radius: 50%;
-            border: 2px solid #D4AF37;
-            box-shadow: 0 2px 6px rgba(112, 18, 43, 0.2);
-        }
-
-        .student-avatar-fallback {
+        .teacher-avatar-fallback {
             width: 42px;
             height: 42px;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             border: 2px solid #D4AF37;
             background-color: rgba(112, 18, 43, 0.08);
             color: #70122B;
@@ -192,7 +177,7 @@
             justify-content: center;
         }
 
-        .student-name {
+        .teacher-name {
             color: #4A0818;
             font-weight: 700;
             font-size: 0.56rem;
@@ -202,7 +187,7 @@
             word-break: break-word;
         }
 
-        .student-subinfo {
+        .teacher-subinfo {
             font-size: 0.44rem;
             color: #475569;
         }
@@ -337,7 +322,7 @@
 
     <div class="text-center no-print-bar no-print">
         <button onclick="window.print()" class="btn btn-gold btn-sm shadow px-3 py-2 fs-6">
-            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial (PDF 2 Páginas / PVC 5.4 cm x 8.6 cm)
+            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial Docente (PDF 2 Páginas / PVC 5.4 cm x 8.6 cm)
         </button>
         <button onclick="window.close()" class="btn btn-guinda btn-sm shadow ms-2 px-3 py-2 fs-6">
             <i class="bi bi-x-lg me-1"></i> Cerrar
@@ -347,7 +332,7 @@
     <!-- Credentials Container (Scaled on screen, 5.4 cm x 8.6 cm on print) -->
     <div class="credentials-wrapper">
         
-        <!-- PAGE 1: FRONT SIDE (Frente Estudiante) -->
+        <!-- PAGE 1: FRONT SIDE (Frente Docente) -->
         <div class="card-print-page card-print-page-front">
             <div class="card-side-label no-print"><i class="bi bi-card-heading me-1"></i> Frente (5.4 cm x 8.6 cm)</div>
             <div class="id-card id-card-front">
@@ -359,29 +344,25 @@
                         <img src="{{ asset('images/logo_escuela2.jpeg') }}" alt="Logo Escuela" class="school-logo">
                     </div>
                     <div class="text-uppercase header-school-name">Escuela Preparatoria Oficial No. 112</div>
-                    <div class="header-title">Credencial Estudiantil</div>
-                    <span class="header-cycle">Ciclo Escolar {{ $student->grupo->ciclo_escolar }}</span>
+                    <div class="header-title">Credencial Docente</div>
+                    <span class="header-cycle" style="font-size: 0.38rem;">PERSONAL ACADÉMICO</span>
                 </div>
 
                 <div class="header-divider-gold"></div>
 
                 <div class="id-card-body">
                     <div class="my-1">
-                        @if($student->foto)
-                            <img src="{{ asset('storage/' . $student->foto) }}" alt="Foto de {{ $student->nombre_completo }}" class="student-photo">
-                        @else
-                            <div class="student-avatar-fallback">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                        @endif
+                        <div class="teacher-avatar-fallback">
+                            <i class="bi bi-person-badge-fill"></i>
+                        </div>
                     </div>
 
-                    <h5 class="student-name">{{ $student->nombre_completo }}</h5>
-                    <div class="student-subinfo">Matrícula: <strong class="text-dark font-monospace">{{ $student->matricula }}</strong></div>
+                    <h5 class="teacher-name">{{ $teacher->nombre_completo }}</h5>
+                    <div class="teacher-subinfo">Clave: <strong class="text-dark font-monospace">DOC-{{ $teacher->id }}</strong></div>
 
                     <div class="d-flex justify-content-center gap-1 my-1">
-                        <span class="badge badge-guinda">G. {{ $student->grupo->codigo_grupo }}</span>
-                        <span class="badge badge-dorado">{{ ucfirst($student->grupo->turno) }}</span>
+                        <span class="badge badge-guinda">Docente</span>
+                        <span class="badge badge-dorado">Activo</span>
                     </div>
 
                     <div class="qr-box">
@@ -389,18 +370,18 @@
                     </div>
 
                     <div class="text-muted font-monospace" style="font-size: 0.38rem;">
-                        UUID: {{ $student->uuid }}
+                        UUID: {{ $teacher->uuid }}
                     </div>
                 </div>
 
                 <div class="privacy-badge">
                     <i class="bi bi-shield-check me-1" style="color: #F3C649;"></i>
-                    Código QR seudonomizado de acceso
+                    Acceso Kiosco Asistencia Docente
                 </div>
             </div>
         </div>
 
-        <!-- PAGE 2: BACK SIDE (Reverso Estudiante con Firma del Director) -->
+        <!-- PAGE 2: BACK SIDE (Reverso Docente con Firma del Director) -->
         <div class="card-print-page card-print-page-back">
             <div class="card-side-label no-print"><i class="bi bi-card-text me-1"></i> Reverso (5.4 cm x 8.6 cm)</div>
             <div class="id-card id-card-back">
@@ -410,18 +391,18 @@
                 <div class="id-card-header py-1">
                     <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.44rem;">Escuela Preparatoria Oficial No. 112</div>
                     <div class="text-muted font-monospace" style="font-size: 0.38rem;">CCT: 15EBH0248W | Matutino y Vespertino</div>
-                    <div class="badge badge-guinda mt-1" style="font-size: 0.38rem;">DATOS INSTITUCIONALES</div>
+                    <div class="badge badge-guinda mt-1" style="font-size: 0.38rem;">REGISTRO DE PERSONAL DOCENTE</div>
                 </div>
 
                 <div class="header-divider-gold"></div>
 
                 <div class="id-card-body p-2">
                     <div class="school-info-box p-1 rounded bg-light border" style="font-size: 0.38rem; line-height: 1.15; color: #334155; width: 100%;">
-                        <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill text-primary me-1"></i> Disposiciones Generales:</div>
+                        <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill text-primary me-1"></i> Lineamientos de Personal:</div>
                         <ul class="ps-2 mb-0" style="padding-left: 10px !important;">
-                            <li>Esta credencial es <strong>personal e intransferible</strong>. Identifica al alumno activo.</li>
-                            <li>Indispensable para registro en <strong>SIGO 112</strong> y acceso al plantel.</li>
-                            <li>En caso de extravío, reportar a la dirección escolar.</li>
+                            <li>Acredita al titular como <strong>Docente Oficial</strong> de la institución.</li>
+                            <li>Obligatoria para registro en <strong>SIGO 112</strong> y acceso al plantel.</li>
+                            <li>En caso de extravío, notificar a la dirección escolar.</li>
                         </ul>
                     </div>
 
@@ -447,7 +428,7 @@
 
                 <div class="privacy-badge">
                     <i class="bi bi-shield-lock-fill me-1" style="color: #F3C649;"></i>
-                    Vigencia: Ciclo Escolar {{ $student->grupo->ciclo_escolar }}
+                    Identificación Oficial de Personal Académico
                 </div>
             </div>
         </div>

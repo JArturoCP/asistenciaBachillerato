@@ -165,7 +165,7 @@ class AdminStudentController extends Controller
     {
         $student->load(['user', 'grupo', 'tutores']);
         
-        $qrCodeSvg = QrCode::size(170)->margin(1)->generate($student->uuid);
+        $qrCodeSvg = QrCode::size(85)->margin(1)->generate($student->uuid);
         
         AuditLog::log('READ', 'estudiantes', $student->id, "Generación de credencial QR para: {$student->nombre_completo}");
 

@@ -28,10 +28,10 @@
         <div class="accordion" id="accordionTeachers">
             @forelse($teachers as $teacher)
                 <div class="accordion-item card-custom border mb-3 overflow-hidden">
-                    <h2 class="accordion-header" id="headingTeacher-{{ $teacher->id }}">
-                        <div class="accordion-button collapsed py-3 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTeacher-{{ $teacher->id }}" aria-expanded="false" aria-controls="collapseTeacher-{{ $teacher->id }}">
-                            <div class="d-flex align-items-center me-auto">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold me-3" style="width: 44px; height: 44px;">
+                    <div class="d-flex align-items-center justify-content-between bg-white border-bottom flex-wrap pe-3">
+                        <button class="accordion-button collapsed flex-grow-1 py-3 px-4 shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTeacher-{{ $teacher->id }}" aria-expanded="false" aria-controls="collapseTeacher-{{ $teacher->id }}">
+                            <div class="d-flex align-items-center">
+                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold me-3" style="width: 44px; height: 44px; flex-shrink: 0;">
                                     <i class="bi bi-person-workspace fs-5"></i>
                                 </div>
                                 <div>
@@ -39,24 +39,27 @@
                                     <small class="text-muted"><i class="bi bi-envelope me-1"></i> {{ $teacher->email }} | <i class="bi bi-telephone me-1"></i> {{ $teacher->phone ?? 'Sin teléfono' }}</small>
                                 </div>
                             </div>
+                        </button>
 
-                            <div class="d-flex align-items-center gap-2 me-3" onclick="event.stopPropagation();">
-                                <span class="badge bg-secondary rounded-pill me-2">
-                                    <i class="bi bi-book me-1"></i> {{ $teacher->docenteGrupos->count() }} {{ Str::plural('clase', $teacher->docenteGrupos->count()) }}
-                                </span>
-                                <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditTeacher-{{ $teacher->id }}" title="Editar Datos del Docente">
-                                    <i class="bi bi-pencil me-1"></i> Editar Datos
+                        <div class="d-flex align-items-center gap-2 py-2 px-2 ms-auto">
+                            <span class="badge bg-secondary rounded-pill me-1">
+                                <i class="bi bi-book me-1"></i> {{ $teacher->docenteGrupos->count() }} {{ Str::plural('clase', $teacher->docenteGrupos->count()) }}
+                            </span>
+                            <a href="{{ route('admin.teachers.credential', $teacher) }}" target="_blank" class="btn btn-outline-dark btn-sm fw-semibold" title="Ver e imprimir Credencial QR Docente">
+                                <i class="bi bi-qr-code-scan me-1"></i> Credencial QR
+                            </a>
+                            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalEditTeacher-{{ $teacher->id }}" title="Editar Datos del Docente">
+                                <i class="bi bi-pencil me-1"></i> Editar Datos
+                            </button>
+                            <form action="{{ route('admin.teachers.destroyTeacher', $teacher) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar al docente {{ $teacher->nombre_completo }}?');">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Docente">
+                                    <i class="bi bi-trash me-1"></i> Eliminar
                                 </button>
-                                <form action="{{ route('admin.teachers.destroyTeacher', $teacher) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar al docente {{ $teacher->nombre_completo }}?');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button type="submit" class="btn btn-outline-danger btn-sm" title="Eliminar Docente">
-                                        <i class="bi bi-trash me-1"></i> Eliminar
-                                    </button>
-                                </form>
-                            </div>
+                            </form>
                         </div>
-                    </h2>
+                    </div>
 
                     <div id="collapseTeacher-{{ $teacher->id }}" class="accordion-collapse collapse" aria-labelledby="headingTeacher-{{ $teacher->id }}" data-bs-parent="#accordionTeachers">
                         <div class="accordion-body bg-light border-top p-4">

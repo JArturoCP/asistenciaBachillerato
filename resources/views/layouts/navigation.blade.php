@@ -66,6 +66,9 @@
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.teachers.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.teachers.index') }}">
                     <i class="bi bi-journal-text me-1"></i> Docentes
                 </a>
+                <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.teacher-attendance.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.teacher-attendance.index') }}">
+                    <i class="bi bi-person-check me-1"></i> Asistencia Docentes
+                </a>
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.guardians.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.guardians.index') }}">
                     <i class="bi bi-shield-check me-1"></i> Padres y Consentimientos
                 </a>

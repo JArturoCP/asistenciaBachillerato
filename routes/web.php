@@ -9,7 +9,7 @@ use App\Http\Controllers\Admin\AdminPendingRegistrationController;
 use App\Http\Controllers\ScanController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
-use App\Http\Controllers\WhatsAppController;
+use App\Http\Controllers\Admin\AdminTeacherAttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -63,6 +63,7 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
 
     // Teachers Management & Assignments CRUD
     Route::get('teachers', [AdminTeacherController::class, 'index'])->name('teachers.index');
+    Route::get('teachers/{teacher}/credential', [AdminTeacherController::class, 'showCredential'])->name('teachers.credential');
     Route::post('teachers/store', [AdminTeacherController::class, 'storeTeacher'])->name('teachers.store');
     Route::put('teachers/{teacher}', [AdminTeacherController::class, 'updateTeacher'])->name('teachers.updateTeacher');
     Route::delete('teachers/{teacher}', [AdminTeacherController::class, 'destroyTeacher'])->name('teachers.destroyTeacher');
@@ -78,6 +79,11 @@ Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('adm
     Route::delete('guardians/{guardian}', [AdminGuardianController::class, 'destroyGuardian'])->name('guardians.destroyGuardian');
     Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
     Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
+
+    // Teacher Attendance Control (Admin only)
+    Route::get('teacher-attendance', [AdminTeacherAttendanceController::class, 'index'])->name('teacher-attendance.index');
+    Route::post('teacher-attendance/update', [AdminTeacherAttendanceController::class, 'updateStatus'])->name('teacher-attendance.update');
+    Route::get('teacher-attendance/export', [AdminTeacherAttendanceController::class, 'exportCsv'])->name('teacher-attendance.export');
 });
 
 
