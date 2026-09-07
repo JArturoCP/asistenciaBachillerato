@@ -48,6 +48,12 @@
             <select id="role" name="role" class="form-select py-2 @error('role') is-invalid @enderror" required style="border-radius: 8px;">
                 <option value="parent" {{ old('role') == 'parent' ? 'selected' : '' }}>Padre de Familia / Tutor Legal</option>
                 <option value="teacher" {{ old('role') == 'teacher' ? 'selected' : '' }}>Docente / Profesor</option>
+                <option value="orientador" {{ old('role') == 'orientador' ? 'selected' : '' }}>Orientador Educativo</option>
+                <option value="director" {{ old('role') == 'director' ? 'selected' : '' }}>Director</option>
+                <option value="subdirector" {{ old('role') == 'subdirector' ? 'selected' : '' }}>Subdirector</option>
+                <option value="pedagogo" {{ old('role') == 'pedagogo' ? 'selected' : '' }}>Pedagogo</option>
+                <option value="secretario_escolar" {{ old('role') == 'secretario_escolar' ? 'selected' : '' }}>Secretario Escolar</option>
+                <option value="supervisor" {{ old('role') == 'supervisor' ? 'selected' : '' }}>Supervisor</option>
             </select>
             @error('role')
                 <div class="text-danger small mt-1">{{ $message }}</div>

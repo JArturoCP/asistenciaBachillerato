@@ -24,6 +24,7 @@ class User extends Authenticatable
         'password',
         'role',
         'phone',
+        'foto',
         'is_approved',
     ];
 
@@ -104,6 +105,50 @@ class User extends Authenticatable
     public function isStudent(): bool
     {
         return $this->role === 'student' || $this->role === 'estudiante';
+    }
+
+    public function isSupervisor(): bool
+    {
+        return $this->role === 'supervisor';
+    }
+
+    public function isDirector(): bool
+    {
+        return $this->role === 'director';
+    }
+
+    public function isSubdirector(): bool
+    {
+        return $this->role === 'subdirector';
+    }
+
+    public function isOrientador(): bool
+    {
+        return $this->role === 'orientador';
+    }
+
+    public function isPedagogo(): bool
+    {
+        return $this->role === 'pedagogo';
+    }
+
+    public function isSecretario(): bool
+    {
+        return $this->role === 'secretario_escolar' || $this->role === 'secretario';
+    }
+
+    public function canViewAllStudentAttendance(): bool
+    {
+        return in_array($this->role, [
+            'superadmin', 'admin', 'supervisor', 'director', 'subdirector', 'orientador', 'pedagogo', 'secretario_escolar', 'secretario'
+        ], true);
+    }
+
+    public function canViewAllTeacherAttendance(): bool
+    {
+        return in_array($this->role, [
+            'superadmin', 'admin', 'supervisor'
+        ], true);
     }
 
     public function estudiante(): HasOne

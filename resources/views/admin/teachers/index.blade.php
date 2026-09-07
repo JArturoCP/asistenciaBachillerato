@@ -31,9 +31,13 @@
                     <div class="d-flex align-items-center justify-content-between bg-white border-bottom flex-wrap pe-3">
                         <button class="accordion-button collapsed flex-grow-1 py-3 px-4 shadow-none bg-transparent" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTeacher-{{ $teacher->id }}" aria-expanded="false" aria-controls="collapseTeacher-{{ $teacher->id }}">
                             <div class="d-flex align-items-center">
-                                <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold me-3" style="width: 44px; height: 44px; flex-shrink: 0;">
-                                    <i class="bi bi-person-workspace fs-5"></i>
-                                </div>
+                                @if($teacher->foto)
+                                    <img src="{{ asset('storage/' . $teacher->foto) }}" alt="Foto de {{ $teacher->nombre_completo }}" class="rounded-circle border object-fit-cover me-3 shadow-sm" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                @else
+                                    <div class="rounded-circle bg-primary bg-opacity-10 text-primary d-inline-flex align-items-center justify-content-center fw-bold me-3" style="width: 44px; height: 44px; flex-shrink: 0;">
+                                        <i class="bi bi-person-workspace fs-5"></i>
+                                    </div>
+                                @endif
                                 <div>
                                     <h6 class="fw-bold text-dark mb-0 fs-6">{{ $teacher->nombre_formateado }}</h6>
                                     <small class="text-muted"><i class="bi bi-envelope me-1"></i> {{ $teacher->email }} | <i class="bi bi-telephone me-1"></i> {{ $teacher->phone ?? 'Sin teléfono' }}</small>
@@ -184,7 +188,7 @@
                     <div class="modal fade text-start" id="modalEditTeacher-{{ $teacher->id }}" tabindex="-1" aria-hidden="true">
                         <div class="modal-dialog modal-lg">
                             <div class="modal-content card-custom">
-                                <form action="{{ route('admin.teachers.updateTeacher', $teacher) }}" method="POST">
+                                <form action="{{ route('admin.teachers.updateTeacher', $teacher) }}" method="POST" enctype="multipart/form-data">
                                     @csrf
                                     @method('PUT')
                                     <input type="hidden" name="form_modal_id" value="modalEditTeacher-{{ $teacher->id }}">
@@ -217,6 +221,16 @@
                                                 <label class="form-label fw-semibold">Apellido Materno</label>
                                                 <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno', $teacher->apellido_materno) }}">
                                             </div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label class="form-label fw-semibold">Fotografía del Docente</label>
+                                            <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*">
+                                            @if($teacher->foto)
+                                                <div class="mt-2 d-flex align-items-center gap-2">
+                                                    <span class="small text-muted">Fotografía actual:</span>
+                                                    <img src="{{ asset('storage/' . $teacher->foto) }}" class="rounded-circle border object-fit-cover shadow-sm" style="width: 40px; height: 40px;">
+                                                </div>
+                                            @endif
                                         </div>
                                         <div class="mb-3">
                                             <label class="form-label fw-semibold">Correo Electrónico (Login)</label>
@@ -254,7 +268,7 @@
     <div class="modal fade" id="modalCreateTeacher" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
             <div class="modal-content card-custom">
-                <form action="{{ route('admin.teachers.store') }}" method="POST">
+                <form action="{{ route('admin.teachers.store') }}" method="POST" enctype="multipart/form-data">
                     @csrf
                     <input type="hidden" name="form_modal_id" value="modalCreateTeacher">
                     <div class="modal-header">
@@ -286,6 +300,11 @@
                                 <label class="form-label fw-semibold">Apellido Materno</label>
                                 <input type="text" name="apellido_materno" class="form-control @error('apellido_materno') is-invalid @enderror" value="{{ old('apellido_materno') }}" placeholder="Ej. Sánchez">
                             </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-semibold">Fotografía del Docente</label>
+                            <input type="file" name="foto" class="form-control @error('foto') is-invalid @enderror" accept="image/*">
+                            <div class="form-text small">Formato JPG, PNG o WEBP (Máx. 2MB).</div>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Correo Electrónico (Login)</label>

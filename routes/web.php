@@ -10,21 +10,44 @@ use App\Http\Controllers\ScanController;
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
 use App\Http\Controllers\Admin\AdminTeacherAttendanceController;
+use App\Http\Controllers\GeneralAttendanceController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return redirect()->route('login');
 });
 
-// Main Admin Dashboard (Restricted to Admin and Superadmin; throws 403 for Parents and Teachers)
+// Main Dashboard (Admin/Superadmin see dashboard, institutional roles see attendance overview, teachers see teacher attendance, parents see parent portal)
 Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified', 'role:admin,superadmin'])->name('dashboard');
+    $u = auth()->user();
+    if ($u->isSuperAdmin() || $u->isAdmin()) {
+        return view('dashboard');
+    }
+    if ($u->canViewAllStudentAttendance() || $u->canViewAllTeacherAttendance()) {
+        return redirect()->route('attendance.overview.index');
+    }
+    if ($u->isTeacher()) {
+        return redirect()->route('teacher.attendance.index');
+    }
+    if ($u->isParent()) {
+        return redirect()->route('parent.dashboard');
+    }
+    return redirect()->route('login');
+})->middleware(['auth', 'verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    // General Attendance Overview Panel (Roles: superadmin, admin, supervisor, director, subdirector, orientador, pedagogo, secretario_escolar)
+    Route::middleware(['role:superadmin,admin,supervisor,director,subdirector,orientador,pedagogo,secretario_escolar'])->prefix('attendance')->name('attendance.overview.')->group(function () {
+        Route::get('overview', [GeneralAttendanceController::class, 'index'])->name('index');
+        Route::post('update-student', [GeneralAttendanceController::class, 'updateStudentStatus'])->name('update-student');
+        Route::post('update-teacher', [GeneralAttendanceController::class, 'updateTeacherStatus'])->name('update-teacher');
+        Route::get('export-students', [GeneralAttendanceController::class, 'exportStudentCsv'])->name('export-students');
+        Route::get('export-teachers', [GeneralAttendanceController::class, 'exportTeacherCsv'])->name('export-teachers');
+    });
 
     // Kiosk Scanner Station Routes (Visible to Superadmin, Admin & Teacher; restricted for Parent)
     Route::middleware(['role:superadmin,admin,teacher'])->group(function () {

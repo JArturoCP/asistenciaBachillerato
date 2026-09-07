@@ -36,7 +36,7 @@ class RegisteredUserController extends Controller
             'name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'lowercase', 'email', 'max:255', Rule::unique('users')->whereNull('deleted_at')],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
-            'role' => ['nullable', 'in:parent,teacher,admin'],
+            'role' => ['nullable', 'in:parent,teacher,admin,supervisor,director,subdirector,orientador,pedagogo,secretario_escolar'],
             'phone' => ['nullable', 'string', 'digits:10'],
         ], [
             'email.required' => 'El correo electrónico es obligatorio.',

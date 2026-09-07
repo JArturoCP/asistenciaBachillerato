@@ -177,6 +177,14 @@
             justify-content: center;
         }
 
+        .teacher-photo {
+            width: 42px;
+            height: 42px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #D4AF37;
+        }
+
         .teacher-name {
             color: #4A0818;
             font-weight: 700;
@@ -352,9 +360,13 @@
 
                 <div class="id-card-body">
                     <div class="my-1">
-                        <div class="teacher-avatar-fallback">
-                            <i class="bi bi-person-badge-fill"></i>
-                        </div>
+                        @if($teacher->foto)
+                            <img src="{{ asset('storage/' . $teacher->foto) }}" alt="Foto de {{ $teacher->nombre_completo }}" class="teacher-photo shadow-sm">
+                        @else
+                            <div class="teacher-avatar-fallback">
+                                <i class="bi bi-person-badge-fill"></i>
+                            </div>
+                        @endif
                     </div>
 
                     <h5 class="teacher-name">{{ $teacher->nombre_completo }}</h5>

@@ -10,6 +10,7 @@ use App\Models\DocenteGrupo;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Storage;
 
 class AdminTeacherController extends Controller
 {
@@ -37,6 +38,7 @@ class AdminTeacherController extends Controller
             'email' => 'required|email|unique:users,email',
             'phone' => 'nullable|string|digits:10',
             'password' => 'required|string|min:8',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ], [
             'nombre.required' => 'El nombre del docente es obligatorio.',
             'apellido_paterno.required' => 'El apellido paterno del docente es obligatorio.',
@@ -46,7 +48,14 @@ class AdminTeacherController extends Controller
             'password.required' => 'La contraseña inicial es obligatoria.',
             'password.min' => 'La contraseña debe contener al menos 8 caracteres.',
             'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
+            'foto.image' => 'La fotografía debe ser una imagen válida (JPG, PNG, WEBP).',
+            'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
+
+        $photoPath = null;
+        if ($request->hasFile('foto')) {
+            $photoPath = $request->file('foto')->store('docentes/fotos', 'public');
+        }
 
         $teacher = User::create([
             'nombre' => $validated['nombre'],
@@ -56,6 +65,7 @@ class AdminTeacherController extends Controller
             'phone' => $validated['phone'],
             'password' => Hash::make($validated['password']),
             'role' => 'teacher',
+            'foto' => $photoPath,
             'is_approved' => true,
         ]);
 
@@ -73,6 +83,7 @@ class AdminTeacherController extends Controller
             'email' => 'required|email|unique:users,email,' . $teacher->id,
             'phone' => 'nullable|string|digits:10',
             'password' => 'nullable|string|min:8',
+            'foto' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ], [
             'nombre.required' => 'El nombre del docente es obligatorio.',
             'apellido_paterno.required' => 'El apellido paterno del docente es obligatorio.',
@@ -81,6 +92,8 @@ class AdminTeacherController extends Controller
             'email.unique' => 'El correo electrónico ya pertenece a otro usuario.',
             'password.min' => 'La nueva contraseña debe contener al menos 8 caracteres.',
             'phone.digits' => 'El número de teléfono debe contener 10 dígitos.',
+            'foto.image' => 'La fotografía debe ser una imagen válida (JPG, PNG, WEBP).',
+            'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
 
         $updateData = [
@@ -93,6 +106,13 @@ class AdminTeacherController extends Controller
 
         if (!empty($validated['password'])) {
             $updateData['password'] = Hash::make($validated['password']);
+        }
+
+        if ($request->hasFile('foto')) {
+            if ($teacher->foto && Storage::disk('public')->exists($teacher->foto)) {
+                Storage::disk('public')->delete($teacher->foto);
+            }
+            $updateData['foto'] = $request->file('foto')->store('docentes/fotos', 'public');
         }
 
         $teacher->update($updateData);

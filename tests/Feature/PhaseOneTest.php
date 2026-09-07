@@ -44,7 +44,7 @@ class PhaseOneTest extends TestCase
         $parent = User::where('role', 'parent')->first();
 
         $response = $this->actingAs($parent)->get('/dashboard');
-        $response->assertStatus(403);
+        $response->assertRedirect(route('parent.dashboard'));
     }
 
     public function test_teacher_cannot_access_dashboard_and_receives_403()
@@ -52,7 +52,7 @@ class PhaseOneTest extends TestCase
         $teacher = User::where('role', 'teacher')->first();
 
         $response = $this->actingAs($teacher)->get('/dashboard');
-        $response->assertStatus(403);
+        $response->assertRedirect(route('teacher.attendance.index'));
     }
 
     public function test_role_based_login_redirections()

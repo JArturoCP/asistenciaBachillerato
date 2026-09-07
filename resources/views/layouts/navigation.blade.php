@@ -13,6 +13,7 @@
             $isAdmin = $u?->role === 'admin';
             $isTeacher = $u?->role === 'teacher' || $u?->role === 'docente';
             $isParent = $u?->role === 'parent' || $u?->role === 'tutor';
+            $canViewOverview = $u?->canViewAllStudentAttendance() || $u?->canViewAllTeacherAttendance();
         @endphp
 
         <!-- Navigation Links -->
@@ -22,6 +23,13 @@
             @if($isSuper || $isAdmin)
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('dashboard') ? 'bg-primary fw-bold text-white' : 'hover-opacity' }}" href="{{ route('dashboard') }}">
                     <i class="bi bi-speedometer2 me-1"></i> Dashboard
+                </a>
+            @endif
+
+            {{-- Control General de Asistencias (Supervisor, Director, Subdirector, Orientador, Pedagogo, Secretario Escolar, Admin, Superadmin) --}}
+            @if($canViewOverview)
+                <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('attendance.overview.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('attendance.overview.index') }}">
+                    <i class="bi bi-person-check-fill me-1"></i> Control Asistencias
                 </a>
             @endif
 
@@ -80,7 +88,7 @@
             <div class="text-end d-none d-sm-block">
                 <div class="fw-bold text-white small">{{ Auth::user()->name }}</div>
                 <span class="badge {{ $isSuper ? 'bg-warning text-dark' : 'bg-danger text-white' }} border border-light">
-                    ROL: {{ strtoupper(Auth::user()->role) }}
+                    ROL: {{ strtoupper(str_replace('_', ' ', Auth::user()->role)) }}
                 </span>
             </div>
 

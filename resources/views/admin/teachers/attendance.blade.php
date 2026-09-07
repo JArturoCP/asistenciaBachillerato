@@ -93,8 +93,19 @@
                                 <span class="font-monospace fw-bold text-primary">DOC-{{ $item->teacher->id }}</span>
                             </td>
                             <td>
-                                <div class="fw-bold text-dark">{{ $item->teacher->nombre_completo }}</div>
-                                <div class="text-muted small">Rol: {{ ucfirst($item->teacher->role) }}</div>
+                                <div class="d-flex align-items-center gap-2">
+                                    @if($item->teacher->foto)
+                                        <img src="{{ asset('storage/' . $item->teacher->foto) }}" alt="Foto de {{ $item->teacher->nombre_completo }}" class="rounded-circle border object-fit-cover shadow-sm" style="width: 38px; height: 38px; flex-shrink: 0;">
+                                    @else
+                                        <div class="rounded-circle bg-secondary bg-opacity-10 text-secondary d-inline-flex align-items-center justify-content-center fw-bold" style="width: 38px; height: 38px; flex-shrink: 0;">
+                                            <i class="bi bi-person-fill"></i>
+                                        </div>
+                                    @endif
+                                    <div>
+                                        <div class="fw-bold text-dark">{{ $item->teacher->nombre_completo }}</div>
+                                        <div class="text-muted small">Rol: {{ ucfirst($item->teacher->role) }}</div>
+                                    </div>
+                                </div>
                             </td>
                             <td>
                                 <div class="small"><i class="bi bi-envelope me-1 text-muted"></i>{{ $item->teacher->email }}</div>

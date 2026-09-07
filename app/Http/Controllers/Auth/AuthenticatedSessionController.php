@@ -41,6 +41,7 @@ class AuthenticatedSessionController extends Controller
 
         // Redirect based on role:
         // Superadmin & Admin -> /dashboard
+        // Institutional Roles (Director, Subdirector, Orientador, Pedagogo, Secretario, Supervisor) -> /attendance/overview
         // Teacher -> /teacher/attendance
         // Parent -> /parent/dashboard
         if ($user->isParent()) {
@@ -49,6 +50,10 @@ class AuthenticatedSessionController extends Controller
 
         if ($user->isTeacher() && !$user->isAdmin()) {
             return redirect()->route('teacher.attendance.index');
+        }
+
+        if ($user->canViewAllStudentAttendance() && !$user->isAdmin()) {
+            return redirect()->route('attendance.overview.index');
         }
 
         return redirect()->intended(route('dashboard', absolute: false));
