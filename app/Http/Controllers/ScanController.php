@@ -205,7 +205,7 @@ class ScanController extends Controller
         try {
             foreach ($student->tutores as $guardian) {
                 if ($guardian->alertas_correo_activadas && !empty($guardian->correo_notificaciones)) {
-                    Mail::to($guardian->correo_notificaciones)->send(new AttendanceRecordedMail($student, $attendance));
+                    Mail::to($guardian->correo_notificaciones)->queue(new AttendanceRecordedMail($student, $attendance));
                 }
             }
         } catch (\Throwable $e) {

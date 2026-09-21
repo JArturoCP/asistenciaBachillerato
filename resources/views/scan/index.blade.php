@@ -202,6 +202,9 @@
         let html5QrCode = null;
         let isProcessing = false;
         let resetTimeout = null;
+        let lastProcessedCode = '';
+        let lastProcessedAt = 0;
+        const SAME_CODE_COOLDOWN_MS = 4000;
 
         // 1. Audio Synthesizer via Web Audio API
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -310,7 +313,20 @@
 
         // 5. Send Scan Request to Laravel API
         function sendScanRequest(qrCode, method) {
+            const normalizedCode = String(qrCode || '').trim();
+            const nowMs = Date.now();
+
+            if (!normalizedCode || isProcessing) return;
+
+            // Evita releer inmediatamente el MISMO código que continúa frente
+            // a la cámara, sin bloquear el paso del siguiente alumno.
+            if (normalizedCode === lastProcessedCode && (nowMs - lastProcessedAt) < SAME_CODE_COOLDOWN_MS) {
+                return;
+            }
+
             isProcessing = true;
+            lastProcessedCode = normalizedCode;
+            lastProcessedAt = nowMs;
             clearTimeout(resetTimeout);
 
             fetch('/scan/process', {
@@ -320,7 +336,7 @@
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
                 },
                 body: JSON.stringify({
-                    qr_code: qrCode,
+                    qr_code: normalizedCode,
                     scan_method: method
                 })
             })
@@ -336,7 +352,11 @@
                 });
             })
             .finally(() => {
-                resetTimeout = setTimeout(resetStatusDisplay, 3500);
+                // Liberar la estación inmediatamente al terminar el request.
+                // El panel puede seguir mostrando el resultado sin impedir
+                // que se procese un código DIFERENTE.
+                isProcessing = false;
+                resetTimeout = setTimeout(resetStatusDisplay, 1800);
             });
         }
 
@@ -394,7 +414,6 @@
             title.textContent = 'Esperando Escaneo';
             msg.textContent = 'Acerque el código QR de la credencial a la cámara o pase la credencial por el lector USB.';
             detailsBox.classList.add('d-none');
-            isProcessing = false;
         }
 
         // Initialize camera on load
