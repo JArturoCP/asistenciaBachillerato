@@ -1,0 +1,27 @@
+{
+  "name": "asistencia-bachillerato-whatsapp-service",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Microservicio Baileys para notificaciones de WhatsApp de asistenciaBachillerato",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch src/server.js",
+    "check": "node --check src/server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "7.0.0-rc14",
+    "dotenv": "^17.2.2",
+    "express": "^5.1.0",
+    "pino": "^9.9.5",
+    "qrcode": "^1.5.4"
+  },
+  "allowScripts": {
+    "@whiskeysockets/baileys@7.0.0-rc14": true,
+    "protobufjs@7.6.6": true
+  }
+}

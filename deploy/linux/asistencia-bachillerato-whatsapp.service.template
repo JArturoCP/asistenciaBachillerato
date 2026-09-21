@@ -1,0 +1,34 @@
+[Unit]
+Description=asistenciaBachillerato WhatsApp Service (Baileys)
+Documentation=https://github.com/WhiskeySockets/Baileys
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_GROUP__
+WorkingDirectory=__APP_DIR__/whatsapp-service
+Environment=NODE_ENV=production
+Environment=AUTH_DIR=/var/lib/asistencia-bachillerato-whatsapp/auth
+ExecStart=__NODE_BIN__ src/server.js
+Restart=always
+RestartSec=5
+TimeoutStopSec=15
+KillSignal=SIGTERM
+UMask=0027
+
+# Hardening: el servicio sólo necesita leer el proyecto y escribir la sesión persistente.
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=/var/lib/asistencia-bachillerato-whatsapp
+
+[Install]
+WantedBy=multi-user.target

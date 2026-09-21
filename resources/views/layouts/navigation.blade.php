@@ -4,7 +4,7 @@
         <!-- Logo -->
         <a class="navbar-brand fw-bold text-white d-flex align-items-center me-3" href="{{ route('dashboard') }}">
             <i class="bi bi-qr-code-scan me-2 text-warning fs-3"></i>
-            <span class="fs-5">SIGO<span class="text-warning">.ControlAsistencias</span></span>
+            <span class="fs-5">asistenciaBachillerato<span class="text-warning">.ControlAsistencias</span></span>
         </a>
 
         @php
@@ -79,6 +79,9 @@
                 </a>
                 <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.guardians.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.guardians.index') }}">
                     <i class="bi bi-shield-check me-1"></i> Padres y Consentimientos
+                </a>
+                <a class="nav-link text-white px-2 py-1 rounded {{ request()->routeIs('admin.whatsapp.*') ? 'bg-primary fw-bold' : '' }}" href="{{ route('admin.whatsapp.index') }}">
+                    <i class="bi bi-whatsapp me-1"></i> WhatsApp
                 </a>
             @endif
         </div>

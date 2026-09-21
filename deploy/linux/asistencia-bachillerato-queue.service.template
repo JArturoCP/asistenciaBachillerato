@@ -1,0 +1,31 @@
+[Unit]
+Description=asistenciaBachillerato Laravel Queue Worker
+Wants=network-online.target
+After=network-online.target asistencia-bachillerato-whatsapp.service
+
+[Service]
+Type=simple
+User=__APP_USER__
+Group=__APP_GROUP__
+WorkingDirectory=__APP_DIR__
+ExecStart=__PHP_BIN__ artisan queue:work --sleep=3 --tries=3 --timeout=90 --max-time=3600 --memory=256
+ExecReload=__PHP_BIN__ artisan queue:restart
+Restart=always
+RestartSec=5
+TimeoutStopSec=360
+KillSignal=SIGTERM
+UMask=0027
+
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ProtectHome=true
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+LockPersonality=true
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+ReadWritePaths=__APP_DIR__/storage __APP_DIR__/bootstrap/cache
+
+[Install]
+WantedBy=multi-user.target

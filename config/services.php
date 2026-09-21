@@ -35,9 +35,10 @@ return [
         ],
     ],
 
-    'ultramsg' => [
-        'instance_id' => env('ULTRAMSG_INSTANCE_ID'),
-        'token' => env('ULTRAMSG_TOKEN'),
+    'whatsapp' => [
+        'url' => env('WHATSAPP_SERVICE_URL', 'http://127.0.0.1:3001'),
+        'token' => env('WHATSAPP_SERVICE_TOKEN'),
+        'timeout' => (int) env('WHATSAPP_SERVICE_TIMEOUT', 15),
     ],
 
 ];

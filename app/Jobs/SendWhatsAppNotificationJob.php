@@ -8,6 +8,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use RuntimeException;
 
 class SendWhatsAppNotificationJob implements ShouldQueue
 {
@@ -22,7 +23,7 @@ class SendWhatsAppNotificationJob implements ShouldQueue
     public int $tries = 3;
 
     /**
-     * The number of seconds to wait before retrying the job.
+     * Seconds to wait between attempts.
      */
     public array $backoff = [10, 30];
 
@@ -34,6 +35,8 @@ class SendWhatsAppNotificationJob implements ShouldQueue
 
     public function handle(WhatsAppService $whatsAppService): void
     {
-        $whatsAppService->sendMessage($this->phone, $this->message);
+        if (! $whatsAppService->sendMessage($this->phone, $this->message)) {
+            throw new RuntimeException("No fue posible enviar el WhatsApp a {$this->phone}.");
+        }
     }
 }

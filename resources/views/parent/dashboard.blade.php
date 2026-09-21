@@ -142,7 +142,7 @@
                                 </div>
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" name="whatsapp_alerts_enabled" value="1" id="whatsappAlertSwitch" {{ ($guardian->alertas_whatsapp_activadas ?? true) ? 'checked' : '' }}>
-                                    <label class="form-check-label fw-semibold" for="whatsappAlertSwitch"><i class="bi bi-whatsapp text-success me-1"></i> Alertas por WhatsApp (UltraMsg)</label>
+                                    <label class="form-check-label fw-semibold" for="whatsappAlertSwitch"><i class="bi bi-whatsapp text-success me-1"></i> Alertas por WhatsApp</label>
                                 </div>
                             </div>
                             <button type="submit" class="btn btn-info text-white btn-sm fw-semibold">Guardar Preferencias</button>

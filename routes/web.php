@@ -11,6 +11,7 @@ use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
 use App\Http\Controllers\Admin\AdminTeacherAttendanceController;
 use App\Http\Controllers\GeneralAttendanceController;
+use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -72,6 +73,12 @@ Route::middleware('auth')->group(function () {
 
 // Admin Routes (RBAC Roles: admin, superadmin)
 Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
+    // WhatsApp / Baileys configuration
+    Route::get('whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
+    Route::get('whatsapp/status', [WhatsappController::class, 'status'])->name('whatsapp.status');
+    Route::post('whatsapp/send', [WhatsappController::class, 'store'])->name('whatsapp.send');
+    Route::post('whatsapp/logout', [WhatsappController::class, 'logout'])->name('whatsapp.logout');
+
     // Pending Registration Approval Panel
     Route::get('pending-registrations', [AdminPendingRegistrationController::class, 'index'])->name('pending-registrations.index');
     Route::post('pending-registrations/{user}/approve', [AdminPendingRegistrationController::class, 'approve'])->name('pending-registrations.approve');

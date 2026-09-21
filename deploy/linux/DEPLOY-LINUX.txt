@@ -1,0 +1,168 @@
+asistenciaBachillerato + BAILEYS — FASE 2 / DESPLIEGUE LINUX
+==========================================
+
+Objetivo
+--------
+Ejecutar Baileys y el worker de Laravel como servicios systemd, mantener el
+puerto 3001 únicamente en localhost y conservar las credenciales de WhatsApp
+fuera del árbol desplegable del proyecto.
+
+Recomendación de Node.js
+------------------------
+Use Node.js 24 LTS para producción. Node 22 LTS también es válido.
+No use Node 20: aunque Baileys todavía declara node >=20, Node 20 ya llegó a EOL.
+
+Suposición de ejemplo
+---------------------
+Proyecto: /var/www/asistenciaBachillerato
+Usuario:  www-data
+Grupo:    www-data
+
+Si su instalación usa otras rutas/usuarios, el instalador los recibe como
+parámetros y genera las unidades systemd con los valores reales.
+
+1) Copiar/actualizar el proyecto
+--------------------------------
+Copie los archivos de esta entrega sobre asistenciaBachillerato respetando las rutas.
+No copie una carpeta auth local de desarrollo al servidor.
+
+2) Instalar dependencias del microservicio
+------------------------------------------
+cd /var/www/asistenciaBachillerato/whatsapp-service
+npm install
+
+Después del primer npm install se generará package-lock.json. En despliegues
+posteriores, conserve el lockfile y utilice:
+
+npm ci --omit=dev
+
+3) Configurar Laravel
+---------------------
+En /var/www/asistenciaBachillerato/.env:
+
+WHATSAPP_SERVICE_URL=http://127.0.0.1:3001
+WHATSAPP_SERVICE_TOKEN=<TOKEN_ALEATORIO_DE_AL_MENOS_32_CARACTERES>
+WHATSAPP_SERVICE_TIMEOUT=15
+QUEUE_CONNECTION=database
+
+Luego:
+
+cd /var/www/asistenciaBachillerato
+php artisan optimize:clear
+php artisan config:cache
+
+4) Configurar el microservicio
+------------------------------
+cd /var/www/asistenciaBachillerato/whatsapp-service
+cp .env.example .env
+
+Editar .env:
+
+HOST=127.0.0.1
+PORT=3001
+WHATSAPP_SERVICE_TOKEN=<EXACTAMENTE_EL_MISMO_TOKEN>
+AUTH_DIR=./auth
+LOG_LEVEL=info
+
+IMPORTANTE:
+En producción systemd sobrescribe AUTH_DIR y usa:
+/var/lib/asistencia-bachillerato-whatsapp/auth
+
+Por tanto la sesión persistirá aunque se reemplace la carpeta del proyecto.
+
+5) Comprobar la cola de Laravel
+---------------------------------
+Esta fase NO agrega migraciones nuevas. No ejecute migrate --force únicamente
+por instalar Baileys.
+
+Compruebe primero:
+
+cd /var/www/asistenciaBachillerato
+php artisan migrate:status
+
+El core de asistenciaBachillerato ya contiene la migración de jobs. Si la tabla jobs ya existe,
+continúe. Si su despliegue tiene migraciones pendientes, revíselas antes de
+aplicarlas porque pueden pertenecer a otros módulos del sistema.
+
+6) Instalar los servicios systemd
+---------------------------------
+cd /var/www/asistenciaBachillerato/deploy/linux
+sudo bash install-systemd.sh /var/www/asistenciaBachillerato www-data www-data
+
+El script:
+- verifica Node/PHP;
+- exige Node 22+ (se recomienda Node 24 LTS);
+- comprueba que los tokens coinciden;
+- crea /var/lib/asistencia-bachillerato-whatsapp/auth con permisos restringidos;
+- genera las unidades systemd con rutas reales;
+- habilita ambos servicios al arranque;
+- los inicia/reinicia;
+- ejecuta un healthcheck básico.
+
+7) Revisar estado
+-----------------
+sudo systemctl status asistencia-bachillerato-whatsapp
+sudo systemctl status asistencia-bachillerato-queue
+
+O bien:
+
+sudo bash /var/www/asistenciaBachillerato/deploy/linux/healthcheck.sh
+
+8) Revisar logs
+---------------
+sudo journalctl -u asistencia-bachillerato-whatsapp -f
+sudo journalctl -u asistencia-bachillerato-queue -f
+
+Últimas 100 líneas:
+
+sudo journalctl -u asistencia-bachillerato-whatsapp -n 100 --no-pager
+sudo journalctl -u asistencia-bachillerato-queue -n 100 --no-pager
+
+9) Vincular WhatsApp
+--------------------
+Entre a asistenciaBachillerato como admin/superadmin y abra:
+
+/admin/whatsapp
+
+Escanee el QR desde WhatsApp > Dispositivos vinculados.
+
+No exponga el puerto 3001 en Nginx, Apache, router ni firewall. Laravel y
+Baileys se comunican por 127.0.0.1.
+
+10) Probar el flujo completo
+----------------------------
+A. Envíe un mensaje desde la pantalla administrativa de WhatsApp.
+B. Confirme que llega al teléfono de prueba.
+C. Realice un registro de asistencia de un alumno con tutor y alertas activas.
+D. Verifique la cola y el mensaje automático.
+E. Reinicie el servidor y confirme que WhatsApp se reconecta sin pedir otro QR.
+
+11) Reinicios y actualizaciones
+-------------------------------
+Después de modificar server.js:
+
+sudo systemctl restart asistencia-bachillerato-whatsapp
+
+Después de modificar código PHP usado por jobs:
+
+php artisan optimize:clear
+sudo systemctl restart asistencia-bachillerato-queue
+
+Después de un despliegue general:
+
+php artisan config:cache
+php artisan route:cache
+sudo systemctl restart asistencia-bachillerato-whatsapp asistencia-bachillerato-queue
+
+12) Desvinculación intencional
+------------------------------
+Use el botón Desvincular WhatsApp dentro de asistenciaBachillerato. No elimine manualmente la
+sesión salvo recuperación de emergencia.
+
+En emergencia:
+
+sudo systemctl stop asistencia-bachillerato-whatsapp
+sudo rm -rf /var/lib/asistencia-bachillerato-whatsapp/auth/*
+sudo systemctl start asistencia-bachillerato-whatsapp
+
+asistenciaBachillerato generará un QR nuevo.
