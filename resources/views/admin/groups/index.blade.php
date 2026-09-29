@@ -5,9 +5,11 @@
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-diagram-3 text-success me-2"></i> Gestión de Grupos Académicos
             </h2>
+            @can('groups.create')
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreateGroup">
                 <i class="bi bi-plus-circle me-1"></i> Nuevo Grupo
             </button>
+            @endcan
         </div>
 @endsection
 
@@ -47,9 +49,12 @@
                                 <span class="badge bg-light text-dark border">{{ $group->docente_grupos_count }} asignaciones</span>
                             </td>
                             <td class="text-end">
+                                @can('groups.edit')
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGroup-{{ $group->id }}" title="Editar Grupo">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+                                @endcan
+                                @can('groups.delete')
                                 <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar el grupo {{ $group->codigo_grupo }}?');">
                                     @csrf
                                     @method('DELETE')
@@ -58,6 +63,8 @@
                                     </button>
                                 </form>
 
+                                @endcan
+                                @can('groups.edit')
                                 <!-- Modal Edit Group -->
                                 <div class="modal fade text-start" id="modalEditGroup-{{ $group->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -114,6 +121,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -128,6 +136,7 @@
         </div>
     </div>
 
+    @can('groups.create')
     <!-- Modal Create Group -->
     <div class="modal fade" id="modalCreateGroup" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -183,4 +192,5 @@
             </div>
         </div>
     </div>
+    @endcan
 @endsection

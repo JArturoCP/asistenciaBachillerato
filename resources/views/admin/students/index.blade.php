@@ -5,9 +5,14 @@
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-person-badge text-primary me-2"></i> Gestión de Estudiantes
             </h2>
-            <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreateStudent">
-                <i class="bi bi-person-plus me-1"></i> Registrar Estudiante
-            </button>
+            <div class="d-flex gap-2">
+                @can('students.import')
+                <a class="btn btn-outline-success btn-sm" href="{{ route('admin.students.import.index') }}"><i class="bi bi-filetype-csv me-1"></i> Importar CSV</a>
+                @endcan
+                @can('students.create')
+                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreateStudent"><i class="bi bi-person-plus me-1"></i> Registrar Estudiante</button>
+                @endcan
+            </div>
         </div>
 @endsection
 
@@ -102,9 +107,12 @@
                                 <a href="{{ route('admin.students.credential', $student) }}" target="_blank" class="btn btn-outline-dark btn-sm me-1" title="Ver e imprimir Credencial QR">
                                     <i class="bi bi-qr-code text-primary"></i> Credencial
                                 </a>
+                                @can('students.edit')
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditStudent-{{ $student->id }}" title="Editar Estudiante">
                                     <i class="bi bi-pencil"></i>
                                 </button>
+                                @endcan
+                                @can('students.delete')
                                 <form action="{{ route('admin.students.destroy', $student) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar al estudiante {{ $student->nombre_completo }}?');">
                                     @csrf
                                     @method('DELETE')
@@ -113,6 +121,8 @@
                                     </button>
                                 </form>
 
+                                @endcan
+                                @can('students.edit')
                                 <!-- Modal Edit Student -->
                                 <div class="modal fade text-start" id="modalEditStudent-{{ $student->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-lg">
@@ -140,7 +150,7 @@
                                                     <div class="row">
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label fw-semibold">Matrícula</label>
-                                                            <input type="text" name="matricula" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula', $student->matricula) }}" required>
+                                                            <input type="text" name="matricula" maxlength="50" class="form-control @error('matricula') is-invalid @enderror" value="{{ old('matricula', $student->matricula) }}" required>
                                                         </div>
                                                         <div class="col-md-6 mb-3">
                                                             <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
@@ -194,6 +204,7 @@
                                         </div>
                                     </div>
                                 </div>
+                                @endcan
                             </td>
                         </tr>
                     @empty
@@ -212,6 +223,7 @@
         </div>
     </div>
 
+    @can('students.create')
     <!-- Modal Create Student -->
     <div class="modal fade" id="modalCreateStudent" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-lg">
@@ -237,8 +249,9 @@
 
                         <div class="row">
                             <div class="col-md-6 mb-3">
-                                <label class="form-label fw-semibold">Matrícula Asignada (Automática)</label>
-                                <input type="text" name="matricula" class="form-control bg-light fw-bold text-primary font-monospace" value="{{ $nextMatricula }}" readonly>
+                                <label class="form-label fw-semibold">Número de cuenta / matrícula (opcional)</label>
+                                <input type="text" name="matricula" maxlength="50" class="form-control font-monospace @error('matricula') is-invalid @enderror" value="{{ old('matricula') }}" placeholder="Automática: {{ $nextMatricula }}">
+                                <small class="text-muted">Captúralo manualmente o deja vacío para generar BAC-año-consecutivo. Se conserva como texto (ceros iniciales).</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
@@ -284,4 +297,5 @@
             </div>
         </div>
     </div>
+    @endcan
 @endsection

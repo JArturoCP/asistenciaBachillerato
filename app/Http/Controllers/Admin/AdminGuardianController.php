@@ -20,11 +20,15 @@ class AdminGuardianController extends Controller
             $q->where('is_approved', true);
         })->with(['user', 'estudiantes.user', 'consentimientos'])->get();
 
-        // Only fetch active students who currently DO NOT have any tutor linked
+        // También incluir alumnos ya vinculados por importación que aún requieren
+        // registrar/verificar su consentimiento. Sin esto quedarían fuera del formulario.
         $students = Estudiante::with(['user', 'grupo'])
             ->where('is_active', true)
-            ->doesntHave('tutores')
-            ->get();
+            ->where(function ($q) {
+                $q->doesntHave('tutores')
+                  ->orWhereDoesntHave('consentimientos', fn ($c) => $c
+                      ->where('aceptado', true)->whereNull('fecha_revocado'));
+            })->get();
 
         AuditLog::log('READ', 'tutores', null, 'Consulta de padres/tutores y consentimientos LFPDPPP');
 

@@ -19,6 +19,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        foreach (array_keys(config('access.permissions', [])) as $permission) {
+            \Illuminate\Support\Facades\Gate::define($permission, function (\App\Models\User $user) use ($permission): bool {
+                return $user->hasPermission($permission);
+            });
+        }
+
         //
     }
 }

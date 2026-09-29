@@ -194,7 +194,7 @@ class GeneralAttendanceController extends Controller
     public function updateStudentStatus(Request $request)
     {
         $user = auth()->user();
-        if (!$user->canViewAllStudentAttendance() && !$user->isTeacher()) {
+        if (!$user->hasPermission('attendance.students.manage')) {
             abort(403, 'No tiene permiso para actualizar asistencias de estudiantes.');
         }
 
@@ -229,7 +229,7 @@ class GeneralAttendanceController extends Controller
     public function updateTeacherStatus(Request $request)
     {
         $user = auth()->user();
-        if (!$user->canViewAllTeacherAttendance()) {
+        if (!$user->hasPermission('attendance.teachers.manage')) {
             abort(403, 'No tiene permiso para actualizar asistencias de docentes.');
         }
 
@@ -325,7 +325,7 @@ class GeneralAttendanceController extends Controller
     public function exportTeacherCsv(Request $request)
     {
         $user = auth()->user();
-        if (!$user->canViewAllTeacherAttendance()) {
+        if (!$user->hasPermission('attendance.teachers.manage')) {
             abort(403);
         }
 

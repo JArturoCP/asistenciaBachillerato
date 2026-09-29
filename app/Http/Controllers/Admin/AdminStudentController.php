@@ -8,6 +8,8 @@ use App\Models\Grupo;
 use App\Models\User;
 use App\Models\AuditLog;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
@@ -51,6 +53,7 @@ class AdminStudentController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
+            'matricula' => ['nullable', 'string', 'max:50', 'regex:/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/', Rule::unique('estudiantes', 'matricula')],
             'nombre' => 'required|string|max:100',
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',
@@ -60,36 +63,56 @@ class AdminStudentController extends Controller
         ], [
             'nombre.required' => 'El nombre del estudiante es obligatorio.',
             'apellido_paterno.required' => 'El apellido paterno del estudiante es obligatorio.',
+            'matricula.unique' => 'El número de cuenta ya existe (incluso en registros dados de baja).',
+            'matricula.regex' => 'Use únicamente letras, números, guiones, puntos, / o guion bajo, sin espacios.',
             'group_id.required' => 'Debe asignar un grupo académico al estudiante.',
             'group_id.exists' => 'El grupo seleccionado no existe.',
             'foto.image' => 'La fotografía debe ser una imagen en formato JPG, PNG o WEBP.',
             'foto.max' => 'La fotografía no debe superar los 2MB de peso.',
         ]);
 
-        $matricula = Estudiante::generateNextMatricula();
+        $manualAccount = trim((string) ($validated['matricula'] ?? ''));
 
         $photoPath = null;
         if ($request->hasFile('foto')) {
             $photoPath = $request->file('foto')->store('estudiantes/fotos', 'public');
         }
 
-        DB::transaction(function () use ($validated, $matricula, $photoPath, &$student) {
-            $user = User::create([
-                'nombre' => $validated['nombre'],
-                'apellido_paterno' => $validated['apellido_paterno'],
-                'apellido_materno' => $validated['apellido_materno'] ?? null,
-                'role' => 'student',
-                'is_approved' => true,
-            ]);
-
-            $student = Estudiante::create([
-                'user_id' => $user->id,
-                'matricula' => $matricula,
-                'foto' => $photoPath,
-                'fecha_nacimiento' => $validated['birth_date'],
-                'grupo_id' => $validated['group_id'],
-            ]);
-        });
+        // Los auxiliares pueden registrar simultáneamente: reintentar sólo una colisión
+        // de cuenta automática. En cuentas manuales, la restricción UNIQUE decide.
+        $attempt = 0;
+        while (true) {
+            $matricula = $manualAccount !== '' ? $manualAccount : Estudiante::generateNextMatricula();
+            try {
+                $student = DB::transaction(function () use ($validated, $matricula, $photoPath) {
+                    $user = User::create([
+                        'nombre' => $validated['nombre'],
+                        'apellido_paterno' => $validated['apellido_paterno'],
+                        'apellido_materno' => $validated['apellido_materno'] ?? null,
+                        'role' => 'student',
+                        'is_approved' => true,
+                    ]);
+                    return Estudiante::create([
+                        'user_id' => $user->id,
+                        'matricula' => $matricula,
+                        'foto' => $photoPath,
+                        'fecha_nacimiento' => $validated['birth_date'] ?? null,
+                        'grupo_id' => $validated['group_id'],
+                    ]);
+                });
+                break;
+            } catch (QueryException $e) {
+                $attempt++;
+                if ($manualAccount !== '' && in_array((string) $e->getCode(), ['23000','23505'], true)) {
+                    throw \Illuminate\Validation\ValidationException::withMessages([
+                        'matricula' => 'El número de cuenta ya fue utilizado por otro registro. Revise e intente nuevamente.',
+                    ]);
+                }
+                if ($manualAccount !== '' || $attempt >= 3 || !in_array((string) $e->getCode(), ['23000','23505'], true)) {
+                    throw $e;
+                }
+            }
+        }
 
         AuditLog::log('WRITE', 'estudiantes', $student->id, "Estudiante creado: {$student->nombre_completo} ({$student->matricula})");
 
@@ -99,7 +122,7 @@ class AdminStudentController extends Controller
     public function update(Request $request, Estudiante $student)
     {
         $validated = $request->validate([
-            'matricula' => 'required|string|unique:estudiantes,matricula,' . $student->id,
+            'matricula' => ['required', 'string', 'max:50', 'regex:/^[A-Za-z0-9][A-Za-z0-9._\/-]*$/', Rule::unique('estudiantes', 'matricula')->ignore($student->id)],
             'nombre' => 'required|string|max:100',
             'apellido_paterno' => 'required|string|max:100',
             'apellido_materno' => 'nullable|string|max:100',

@@ -38,7 +38,7 @@ class ScanController extends Controller
         $today = Carbon::today('America/Mexico_City');
 
         // 1. Find active student by UUID or matricula
-        $student = Estudiante::with(['user', 'grupo', 'tutores.user'])
+        $student = Estudiante::with(['user', 'grupo', 'tutores.user', 'consentimientos'])
             ->where('is_active', true)
             ->where(function ($q) use ($qrCode) {
                 $q->where('uuid', $qrCode)
@@ -204,6 +204,10 @@ class ScanController extends Controller
     {
         try {
             foreach ($student->tutores as $guardian) {
+                // Vinculación CSV no implica consentimiento. No enviar avisos sin autorización documentada.
+                if (!$student->consentimientos->contains(fn ($c) =>
+                    (int) $c->tutor_id === (int) $guardian->id && $c->aceptado && $c->fecha_revocado === null
+                )) continue;
                 if ($guardian->alertas_correo_activadas && !empty($guardian->correo_notificaciones)) {
                     Mail::to($guardian->correo_notificaciones)->queue(new AttendanceRecordedMail($student, $attendance));
                 }
@@ -217,7 +221,11 @@ class ScanController extends Controller
     {
         try {
             foreach ($student->tutores as $guardian) {
-                $whatsappEnabled = $guardian->alertas_whatsapp_activadas ?? true;
+                // Se requiere consentimiento vigente por estudiante y por tutor, además de su preferencia.
+                if (!$student->consentimientos->contains(fn ($c) =>
+                    (int) $c->tutor_id === (int) $guardian->id && $c->aceptado && $c->fecha_revocado === null
+                )) continue;
+                $whatsappEnabled = (bool) $guardian->alertas_whatsapp_activadas;
                 $phone = $guardian->telefono ?? $guardian->user?->phone;
 
                 if ($whatsappEnabled && !empty($phone)) {

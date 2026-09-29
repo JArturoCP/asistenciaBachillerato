@@ -9,11 +9,11 @@
             <p class="text-muted small mb-0">Consulta y gestión de registros de entrada y salida de alumnos y personal docente</p>
         </div>
         <div class="d-flex gap-2">
-            @if($tab === 'students' && $canViewStudents)
+            @if($tab === 'students' && $canViewStudents && auth()->user()->hasPermission('attendance.export'))
                 <a href="{{ route('attendance.overview.export-students', ['date' => $date, 'group_id' => $selectedGroupId]) }}" class="btn btn-outline-success btn-sm font-weight-bold">
                     <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Exportar CSV Alumnos
                 </a>
-            @elseif($tab === 'teachers' && $canViewTeachers)
+            @elseif($tab === 'teachers' && $canViewTeachers && auth()->user()->hasPermission('attendance.export'))
                 <a href="{{ route('attendance.overview.export-teachers', ['date' => $date]) }}" class="btn btn-outline-success btn-sm font-weight-bold">
                     <i class="bi bi-file-earmark-spreadsheet-fill me-1"></i> Exportar CSV Docentes
                 </a>
@@ -172,6 +172,7 @@
                                     <small class="text-muted">{{ $row->notes ?? 'Sin observaciones' }}</small>
                                 </td>
                                 <td class="text-end">
+                                    @can('attendance.students.manage')
                                     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalStudent-{{ $row->student->id }}">
                                         <i class="bi bi-pencil-square"></i> Modificar
                                     </button>
@@ -226,6 +227,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty
@@ -295,6 +297,7 @@
                                     <small class="text-muted">{{ $row->notes ?? 'Sin observaciones' }}</small>
                                 </td>
                                 <td class="text-end">
+                                    @can('attendance.teachers.manage')
                                     <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalTeacher-{{ $row->teacher->id }}">
                                         <i class="bi bi-pencil-square"></i> Modificar
                                     </button>
@@ -349,6 +352,7 @@
                                             </div>
                                         </div>
                                     </div>
+                                    @endcan
                                 </td>
                             </tr>
                         @empty

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
@@ -139,16 +140,28 @@ class User extends Authenticatable
 
     public function canViewAllStudentAttendance(): bool
     {
-        return in_array($this->role, [
-            'superadmin', 'admin', 'supervisor', 'director', 'subdirector', 'orientador', 'pedagogo', 'secretario_escolar', 'secretario'
-        ], true);
+        return $this->hasPermission('attendance.students.view');
     }
 
     public function canViewAllTeacherAttendance(): bool
     {
-        return in_array($this->role, [
-            'superadmin', 'admin', 'supervisor'
-        ], true);
+        return $this->hasPermission('attendance.teachers.view');
+    }
+
+    public function accessRole(): BelongsTo
+    {
+        return $this->belongsTo(AccessRole::class, 'role', 'slug');
+    }
+
+    public function hasPermission(string $permission): bool
+    {
+        if (!$this->is_approved || !array_key_exists($permission, config('access.permissions', []))) {
+            return false;
+        }
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+        return (bool) $this->accessRole?->permissions->contains('code', $permission);
     }
 
     public function estudiante(): HasOne

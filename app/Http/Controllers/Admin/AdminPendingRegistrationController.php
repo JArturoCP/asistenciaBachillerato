@@ -21,6 +21,7 @@ class AdminPendingRegistrationController extends Controller
 
     public function approve(User $user)
     {
+        abort_unless(in_array($user->role, ['parent', 'teacher'], true), 403, 'El rol institucional debe asignarse desde Administración de usuarios.');
         $user->update([
             'is_approved' => true,
         ]);

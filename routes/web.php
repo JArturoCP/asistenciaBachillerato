@@ -1,120 +1,112 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\AdminGroupController;
-use App\Http\Controllers\Admin\AdminStudentController;
-use App\Http\Controllers\Admin\AdminTeacherController;
-use App\Http\Controllers\Admin\AdminGuardianController;
-use App\Http\Controllers\Admin\AdminPendingRegistrationController;
-use App\Http\Controllers\ScanController;
+use App\Http\Controllers\Admin\{AdminGroupController, AdminStudentController, AdminTeacherController, AdminGuardianController, AdminPendingRegistrationController, AdminTeacherAttendanceController, AccessUserController, AccessRoleController, StudentCsvImportController};
+use App\Http\Controllers\{ScanController, GeneralAttendanceController, WhatsappController};
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
-use App\Http\Controllers\Admin\AdminTeacherAttendanceController;
-use App\Http\Controllers\GeneralAttendanceController;
-use App\Http\Controllers\WhatsappController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return redirect()->route('login');
-});
-
-// Main Dashboard (Admin/Superadmin see dashboard, institutional roles see attendance overview, teachers see teacher attendance, parents see parent portal)
+Route::get('/', fn () => redirect()->route('login'));
 Route::get('/dashboard', function () {
     $u = auth()->user();
-    if ($u->isSuperAdmin() || $u->isAdmin()) {
-        return view('dashboard');
-    }
-    if ($u->canViewAllStudentAttendance() || $u->canViewAllTeacherAttendance()) {
-        return redirect()->route('attendance.overview.index');
-    }
-    if ($u->isTeacher()) {
-        return redirect()->route('teacher.attendance.index');
-    }
-    if ($u->isParent()) {
-        return redirect()->route('parent.dashboard');
-    }
-    return redirect()->route('login');
-})->middleware(['auth', 'verified'])->name('dashboard');
+    if ($u->isAdmin()) return view('dashboard');
+    if ($u->hasPermission('attendance.students.view') || $u->hasPermission('attendance.teachers.view')) return redirect()->route('attendance.overview.index');
+    if ($u->hasPermission('students.view')) return redirect()->route('admin.students.index');
+    if ($u->hasPermission('scan.use')) return redirect()->route('scan.index');
+    if ($u->hasPermission('teacher.attendance.view')) return redirect()->route('teacher.attendance.index');
+    if ($u->hasPermission('parent.portal')) return redirect()->route('parent.dashboard');
+    abort(403, 'Su cuenta no tiene módulos habilitados. Contacte al administrador.');
+})->middleware(['auth','verified'])->name('dashboard');
 
 Route::middleware('auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // General Attendance Overview Panel (Roles: superadmin, admin, supervisor, director, subdirector, orientador, pedagogo, secretario_escolar)
-    Route::middleware(['role:superadmin,admin,supervisor,director,subdirector,orientador,pedagogo,secretario_escolar'])->prefix('attendance')->name('attendance.overview.')->group(function () {
-        Route::get('overview', [GeneralAttendanceController::class, 'index'])->name('index');
-        Route::post('update-student', [GeneralAttendanceController::class, 'updateStudentStatus'])->name('update-student');
-        Route::post('update-teacher', [GeneralAttendanceController::class, 'updateTeacherStatus'])->name('update-teacher');
-        Route::get('export-students', [GeneralAttendanceController::class, 'exportStudentCsv'])->name('export-students');
-        Route::get('export-teachers', [GeneralAttendanceController::class, 'exportTeacherCsv'])->name('export-teachers');
-    });
+    Route::get('attendance/overview', [GeneralAttendanceController::class, 'index'])
+        ->name('attendance.overview.index');
+    Route::post('attendance/update-student', [GeneralAttendanceController::class, 'updateStudentStatus'])->middleware('can:attendance.students.manage')->name('attendance.overview.update-student');
+    Route::post('attendance/update-teacher', [GeneralAttendanceController::class, 'updateTeacherStatus'])->middleware('can:attendance.teachers.manage')->name('attendance.overview.update-teacher');
+    Route::get('attendance/export-students', [GeneralAttendanceController::class, 'exportStudentCsv'])->middleware(['can:attendance.students.view','can:attendance.export'])->name('attendance.overview.export-students');
+    Route::get('attendance/export-teachers', [GeneralAttendanceController::class, 'exportTeacherCsv'])->middleware(['can:attendance.teachers.view','can:attendance.export'])->name('attendance.overview.export-teachers');
 
-    // Kiosk Scanner Station Routes (Visible to Superadmin, Admin & Teacher; restricted for Parent)
-    Route::middleware(['role:superadmin,admin,teacher'])->group(function () {
+    Route::middleware('can:scan.use')->group(function () {
         Route::get('/scan', [ScanController::class, 'index'])->name('scan.index');
         Route::post('/scan/process', [ScanController::class, 'process'])->name('scan.process');
     });
-
-    // Teacher Panel Routes (Roles: teacher, admin, superadmin)
-    Route::middleware(['role:teacher,admin,superadmin'])->prefix('teacher')->name('teacher.')->group(function () {
-        Route::get('attendance', [TeacherAttendanceController::class, 'index'])->name('attendance.index');
-        Route::post('attendance/update', [TeacherAttendanceController::class, 'updateStatus'])->name('attendance.update');
-        Route::get('attendance/export', [TeacherAttendanceController::class, 'exportCsv'])->name('attendance.export');
-    });
-
-    // Parent Portal Routes (Roles: parent, admin, superadmin)
-    Route::middleware(['role:parent,admin,superadmin'])->prefix('parent')->name('parent.')->group(function () {
+    Route::get('teacher/attendance', [TeacherAttendanceController::class, 'index'])->middleware('can:teacher.attendance.view')->name('teacher.attendance.index');
+    Route::post('teacher/attendance/update', [TeacherAttendanceController::class, 'updateStatus'])->middleware('can:teacher.attendance.manage')->name('teacher.attendance.update');
+    Route::get('teacher/attendance/export', [TeacherAttendanceController::class, 'exportCsv'])->middleware('can:teacher.attendance.export')->name('teacher.attendance.export');
+    Route::middleware('can:parent.portal')->prefix('parent')->name('parent.')->group(function () {
         Route::get('dashboard', [ParentPortalController::class, 'index'])->name('dashboard');
         Route::post('alerts/update', [ParentPortalController::class, 'updateAlerts'])->name('alerts.update');
         Route::post('arco/submit', [ParentPortalController::class, 'submitArcoRequest'])->name('arco.submit');
     });
 });
 
-// Admin Routes (RBAC Roles: admin, superadmin)
-Route::middleware(['auth', 'role:admin,superadmin'])->prefix('admin')->name('admin.')->group(function () {
-    // WhatsApp / Baileys configuration
-    Route::get('whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
-    Route::get('whatsapp/status', [WhatsappController::class, 'status'])->name('whatsapp.status');
-    Route::post('whatsapp/send', [WhatsappController::class, 'store'])->name('whatsapp.send');
-    Route::post('whatsapp/logout', [WhatsappController::class, 'logout'])->name('whatsapp.logout');
+Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware('can:whatsapp.manage')->group(function () {
+        Route::get('whatsapp', [WhatsappController::class, 'index'])->name('whatsapp.index');
+        Route::get('whatsapp/status', [WhatsappController::class, 'status'])->name('whatsapp.status');
+        Route::post('whatsapp/send', [WhatsappController::class, 'store'])->name('whatsapp.send');
+        Route::post('whatsapp/logout', [WhatsappController::class, 'logout'])->name('whatsapp.logout');
+    });
+    Route::get('pending-registrations', [AdminPendingRegistrationController::class, 'index'])->middleware('can:registrations.view')->name('pending-registrations.index');
+    Route::post('pending-registrations/{user}/approve', [AdminPendingRegistrationController::class, 'approve'])->middleware('can:registrations.manage')->name('pending-registrations.approve');
+    Route::delete('pending-registrations/{user}/reject', [AdminPendingRegistrationController::class, 'reject'])->middleware('can:registrations.manage')->name('pending-registrations.reject');
 
-    // Pending Registration Approval Panel
-    Route::get('pending-registrations', [AdminPendingRegistrationController::class, 'index'])->name('pending-registrations.index');
-    Route::post('pending-registrations/{user}/approve', [AdminPendingRegistrationController::class, 'approve'])->name('pending-registrations.approve');
-    Route::delete('pending-registrations/{user}/reject', [AdminPendingRegistrationController::class, 'reject'])->name('pending-registrations.reject');
+    Route::get('groups', [AdminGroupController::class, 'index'])->middleware('can:groups.view')->name('groups.index');
+    Route::post('groups', [AdminGroupController::class, 'store'])->middleware('can:groups.create')->name('groups.store');
+    Route::put('groups/{group}', [AdminGroupController::class, 'update'])->middleware('can:groups.edit')->name('groups.update');
+    Route::delete('groups/{group}', [AdminGroupController::class, 'destroy'])->middleware('can:groups.delete')->name('groups.destroy');
 
-    // Groups CRUD
-    Route::resource('groups', AdminGroupController::class)->except(['create', 'edit', 'show']);
+    Route::get('students', [AdminStudentController::class, 'index'])->middleware('can:students.view')->name('students.index');
+    Route::post('students', [AdminStudentController::class, 'store'])->middleware('can:students.create')->name('students.store');
+    Route::put('students/{student}', [AdminStudentController::class, 'update'])->middleware('can:students.edit')->name('students.update');
+    Route::delete('students/{student}', [AdminStudentController::class, 'destroy'])->middleware('can:students.delete')->name('students.destroy');
+    Route::get('students/{student}/credential', [AdminStudentController::class, 'showCredential'])->middleware('can:students.view')->name('students.credential');
+    Route::middleware('can:students.import')->prefix('students/import')->name('students.import.')->group(function () {
+        Route::get('/', [StudentCsvImportController::class, 'index'])->name('index');
+        Route::get('template', [StudentCsvImportController::class, 'template'])->name('template');
+        Route::post('preview', [StudentCsvImportController::class, 'preview'])->name('preview');
+        Route::post('commit', [StudentCsvImportController::class, 'commit'])->name('commit');
+    });
 
-    // Students CRUD & QR Credential
-    Route::resource('students', AdminStudentController::class)->except(['create', 'edit', 'show']);
-    Route::get('students/{student}/credential', [AdminStudentController::class, 'showCredential'])->name('students.credential');
+    Route::get('teachers', [AdminTeacherController::class, 'index'])->middleware('can:teachers.view')->name('teachers.index');
+    Route::get('teachers/{teacher}/credential', [AdminTeacherController::class, 'showCredential'])->middleware('can:teachers.view')->name('teachers.credential');
+    Route::middleware('can:teachers.manage')->group(function () {
+        Route::post('teachers/store', [AdminTeacherController::class, 'storeTeacher'])->name('teachers.store');
+        Route::put('teachers/{teacher}', [AdminTeacherController::class, 'updateTeacher'])->name('teachers.updateTeacher');
+        Route::delete('teachers/{teacher}', [AdminTeacherController::class, 'destroyTeacher'])->name('teachers.destroyTeacher');
+        Route::post('teachers/materias', [AdminTeacherController::class, 'storeMateria'])->name('teachers.storeMateria');
+        Route::post('teachers/assign', [AdminTeacherController::class, 'assignGroup'])->name('teachers.assignGroup');
+        Route::put('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'updateAssignment'])->name('teachers.updateAssignment');
+        Route::delete('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'removeAssignment'])->name('teachers.removeAssignment');
+    });
+    Route::get('guardians', [AdminGuardianController::class, 'index'])->middleware('can:guardians.view')->name('guardians.index');
+    Route::middleware('can:guardians.manage')->group(function () {
+        Route::post('guardians/store', [AdminGuardianController::class, 'storeGuardian'])->name('guardians.store');
+        Route::put('guardians/{guardian}', [AdminGuardianController::class, 'updateGuardian'])->name('guardians.updateGuardian');
+        Route::delete('guardians/{guardian}', [AdminGuardianController::class, 'destroyGuardian'])->name('guardians.destroyGuardian');
+        Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
+        Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
+    });
+    Route::get('teacher-attendance', [AdminTeacherAttendanceController::class, 'index'])->middleware('can:attendance.teachers.view')->name('teacher-attendance.index');
+    Route::post('teacher-attendance/update', [AdminTeacherAttendanceController::class, 'updateStatus'])->middleware('can:attendance.teachers.manage')->name('teacher-attendance.update');
+    Route::get('teacher-attendance/export', [AdminTeacherAttendanceController::class, 'exportCsv'])->middleware(['can:attendance.teachers.view','can:attendance.export'])->name('teacher-attendance.export');
 
-    // Teachers Management & Assignments CRUD
-    Route::get('teachers', [AdminTeacherController::class, 'index'])->name('teachers.index');
-    Route::get('teachers/{teacher}/credential', [AdminTeacherController::class, 'showCredential'])->name('teachers.credential');
-    Route::post('teachers/store', [AdminTeacherController::class, 'storeTeacher'])->name('teachers.store');
-    Route::put('teachers/{teacher}', [AdminTeacherController::class, 'updateTeacher'])->name('teachers.updateTeacher');
-    Route::delete('teachers/{teacher}', [AdminTeacherController::class, 'destroyTeacher'])->name('teachers.destroyTeacher');
-    Route::post('teachers/materias', [AdminTeacherController::class, 'storeMateria'])->name('teachers.storeMateria');
-    Route::post('teachers/assign', [AdminTeacherController::class, 'assignGroup'])->name('teachers.assignGroup');
-    Route::put('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'updateAssignment'])->name('teachers.updateAssignment');
-    Route::delete('teachers/assignments/{teacherGroup}', [AdminTeacherController::class, 'removeAssignment'])->name('teachers.removeAssignment');
-
-    // Guardians Management & LFPDPPP Consent CRUD
-    Route::get('guardians', [AdminGuardianController::class, 'index'])->name('guardians.index');
-    Route::post('guardians/store', [AdminGuardianController::class, 'storeGuardian'])->name('guardians.store');
-    Route::put('guardians/{guardian}', [AdminGuardianController::class, 'updateGuardian'])->name('guardians.updateGuardian');
-    Route::delete('guardians/{guardian}', [AdminGuardianController::class, 'destroyGuardian'])->name('guardians.destroyGuardian');
-    Route::post('guardians/link', [AdminGuardianController::class, 'linkStudent'])->name('guardians.linkStudent');
-    Route::delete('guardians/{guardian}/unlink/{student}', [AdminGuardianController::class, 'unlinkStudent'])->name('guardians.unlinkStudent');
-
-    // Teacher Attendance Control (Admin only)
-    Route::get('teacher-attendance', [AdminTeacherAttendanceController::class, 'index'])->name('teacher-attendance.index');
-    Route::post('teacher-attendance/update', [AdminTeacherAttendanceController::class, 'updateStatus'])->name('teacher-attendance.update');
-    Route::get('teacher-attendance/export', [AdminTeacherAttendanceController::class, 'exportCsv'])->name('teacher-attendance.export');
+    Route::middleware('can:users.manage')->group(function () {
+        Route::get('users', [AccessUserController::class, 'index'])->name('users.index');
+        Route::post('users', [AccessUserController::class, 'store'])->name('users.store');
+        Route::put('users/{user}', [AccessUserController::class, 'update'])->name('users.update');
+        Route::patch('users/{user}/status', [AccessUserController::class, 'status'])->name('users.status');
+    });
+    Route::middleware('can:roles.manage')->group(function () {
+        Route::get('roles', [AccessRoleController::class, 'index'])->name('roles.index');
+        Route::post('roles', [AccessRoleController::class, 'store'])->name('roles.store');
+        Route::put('roles/{accessRole}', [AccessRoleController::class, 'update'])->name('roles.update');
+        Route::delete('roles/{accessRole}', [AccessRoleController::class, 'destroy'])->name('roles.destroy');
+    });
 });
-
-
 require __DIR__.'/auth.php';
