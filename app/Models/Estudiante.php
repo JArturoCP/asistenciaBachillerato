@@ -40,39 +40,91 @@ class Estudiante extends Model
             if (empty($estudiante->uuid)) {
                 $estudiante->uuid = (string) Str::uuid();
             }
+
             if (empty($estudiante->matricula)) {
-                $estudiante->matricula = self::generateNextMatricula();
+                if (empty($estudiante->grupo_id)) {
+                    throw new \InvalidArgumentException('No es posible generar una matrícula automática sin grupo.');
+                }
+                $estudiante->matricula = self::generateNextMatricula((int) $estudiante->grupo_id);
             }
         });
     }
 
-    public static function generateNextMatricula(): string
+    /**
+     * Formato automático: AÑO-GRUPO-CONSECUTIVO.
+     * Ejemplo para Grupo 1-3 en 2026: 2026-1-3-001.
+     */
+    public static function generateNextMatricula(Grupo|int|null $group = null, ?int $year = null): string
     {
-        $year = date('Y');
-        $prefix = "BAC-{$year}-";
+        $year ??= (int) date('Y');
 
-        $maxNum = 0;
+        // Únicamente para textos de ayuda en la interfaz.
+        if ($group === null) {
+            return sprintf('%d-GRUPO-%03d', $year, 1);
+        }
+
+        $group = is_int($group) ? Grupo::findOrFail($group) : $group;
+        $sequence = self::nextMatriculaSequence($group, $year);
+
+        return self::formatMatricula($group, $sequence, $year);
+    }
+
+    public static function nextMatriculaSequence(Grupo|int $group, ?int $year = null): int
+    {
+        $year ??= (int) date('Y');
+        $group = is_int($group) ? Grupo::findOrFail($group) : $group;
+        $prefix = self::matriculaPrefix($group, $year);
+        $max = 0;
+
         $matriculas = self::withTrashed()
-            ->where('matricula', 'like', "{$prefix}%")
+            ->where('matricula', 'like', $prefix.'%')
             ->pluck('matricula');
 
-        foreach ($matriculas as $m) {
-            if (preg_match('/BAC-\d{4}-(\d+)/', $m, $matches)) {
-                $num = intval($matches[1]);
-                if ($num > $maxNum) {
-                    $maxNum = $num;
-                }
+        $pattern = '/^'.preg_quote($prefix, '/').'(\d+)$/D';
+        foreach ($matriculas as $matricula) {
+            if (preg_match($pattern, (string) $matricula, $matches)) {
+                $max = max($max, (int) $matches[1]);
             }
         }
 
-        if ($maxNum === 0) {
-            $count = self::withTrashed()->count();
-            $nextNum = $count + 1;
+        return $max + 1;
+    }
+
+    public static function formatMatricula(Grupo|string $group, int $sequence, ?int $year = null): string
+    {
+        $year ??= (int) date('Y');
+        return sprintf('%s%03d', self::matriculaPrefix($group, $year), $sequence);
+    }
+
+    public static function matriculaPrefix(Grupo|string $group, ?int $year = null): string
+    {
+        $year ??= (int) date('Y');
+        return $year.'-'.self::matriculaGroupToken($group).'-';
+    }
+
+    /**
+     * Convierte códigos como:
+     * - "Grupo 1-3 (Turno Matutino)" -> "1-3"
+     * - "1-3" -> "1-3"
+     * - "1A-MAT" -> "1A-MAT"
+     */
+    public static function matriculaGroupToken(Grupo|string $group): string
+    {
+        $raw = $group instanceof Grupo ? $group->codigo_grupo : $group;
+        $raw = trim((string) $raw);
+
+        if (preg_match('/\bgrupo\s+([A-Za-z0-9]+(?:[-_][A-Za-z0-9]+)*)/iu', $raw, $matches)) {
+            $raw = $matches[1];
         } else {
-            $nextNum = $maxNum + 1;
+            $raw = preg_replace('/\s*\(.*$/u', '', $raw) ?? $raw;
+            $raw = preg_replace('/^grupo\s+/iu', '', $raw) ?? $raw;
         }
 
-        return sprintf("BAC-%s-%03d", $year, $nextNum);
+        $token = strtoupper(Str::ascii($raw));
+        $token = preg_replace('/[^A-Z0-9]+/', '-', $token) ?? '';
+        $token = trim($token, '-');
+
+        return $token !== '' ? $token : 'GRUPO';
     }
 
     public function getNombreCompletoAttribute(): string

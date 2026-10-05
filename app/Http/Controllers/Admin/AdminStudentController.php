@@ -80,9 +80,11 @@ class AdminStudentController extends Controller
 
         // Los auxiliares pueden registrar simultáneamente: reintentar sólo una colisión
         // de cuenta automática. En cuentas manuales, la restricción UNIQUE decide.
+        $group = Grupo::findOrFail($validated['group_id']);
+
         $attempt = 0;
         while (true) {
-            $matricula = $manualAccount !== '' ? $manualAccount : Estudiante::generateNextMatricula();
+            $matricula = $manualAccount !== '' ? $manualAccount : Estudiante::generateNextMatricula($group);
             try {
                 $student = DB::transaction(function () use ($validated, $matricula, $photoPath) {
                     $user = User::create([

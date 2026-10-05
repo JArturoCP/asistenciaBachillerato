@@ -251,7 +251,7 @@
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Número de cuenta / matrícula (opcional)</label>
                                 <input type="text" name="matricula" maxlength="50" class="form-control font-monospace @error('matricula') is-invalid @enderror" value="{{ old('matricula') }}" placeholder="Automática: {{ $nextMatricula }}">
-                                <small class="text-muted">Captúralo manualmente o deja vacío para generar BAC-año-consecutivo. Se conserva como texto (ceros iniciales).</small>
+                                <small class="text-muted">Captúralo manualmente o deja vacío. Al guardar se genera AÑO-GRUPO-CONSECUTIVO según el grupo seleccionado; por ejemplo, 2026-1-3-001. Se conserva como texto.</small>
                             </div>
                             <div class="col-md-6 mb-3">
                                 <label class="form-label fw-semibold">Fotografía del Alumno (Opcional)</label>
