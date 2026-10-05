@@ -34,7 +34,7 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td><span class="fw-bold text-dark">{{ $group->codigo_grupo }}</span></td>
-                            <td><span class="badge bg-light text-dark border">{{ $group->nombre_grupo ?: $group->nombre_credencial }}</span></td>
+                            <td><span class="badge bg-light text-dark border">{{ $group->nombre_visible }}</span></td>
                             <td>{{ $group->grado }}° Bachillerato</td>
                             <td>
                                 <span class="badge {{ $group->turno === 'matutino' ? 'bg-warning text-dark' : 'bg-info text-white' }}">

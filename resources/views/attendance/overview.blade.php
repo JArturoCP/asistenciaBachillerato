@@ -62,7 +62,7 @@
                         <option value="all" {{ $selectedGroupId === 'all' ? 'selected' : '' }}>Todos los grupos</option>
                         @foreach($groups as $grp)
                             <option value="{{ $grp->id }}" {{ $selectedGroupId == $grp->id ? 'selected' : '' }}>
-                                Grupo {{ $grp->codigo_grupo }} ({{ ucfirst($grp->turno) }})
+                                {{ $grp->nombre_visible }}
                             </option>
                         @endforeach
                     </select>
@@ -153,7 +153,7 @@
                                     <div class="fw-bold text-dark">{{ $row->student->nombre_formateado }}</div>
                                 </td>
                                 <td>
-                                    <span class="badge bg-secondary">{{ $row->student->grupo?->codigo_grupo ?? 'Sin asignación' }}</span>
+                                    <span class="badge bg-secondary">{{ $row->student->grupo?->nombre_visible ?? 'Sin asignación' }}</span>
                                 </td>
                                 <td>{{ $row->check_in_time ?? '--:--' }}</td>
                                 <td>{{ $row->check_out_time ?? '--:--' }}</td>
@@ -193,7 +193,7 @@
                                                     <div class="modal-body">
                                                         <div class="mb-3">
                                                             <label class="form-label fw-semibold">Estudiante</label>
-                                                            <input type="text" class="form-control" value="{{ $row->student->nombre_formateado }} ({{ $row->student->grupo?->codigo_grupo }})" disabled>
+                                                            <input type="text" class="form-control" value="{{ $row->student->nombre_formateado }} ({{ $row->student->grupo?->nombre_visible ?? 'Sin asignación' }})" disabled>
                                                         </div>
                                                         <div class="mb-3">
                                                             <label class="form-label fw-semibold">Estado de Asistencia</label>

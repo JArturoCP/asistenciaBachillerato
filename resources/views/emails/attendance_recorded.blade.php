@@ -31,7 +31,7 @@
             <div class="info-box">
                 <h3 style="margin-top: 0; color: #1e293b;">{{ $student->nombre_completo }}</h3>
                 <div>Matrícula: <strong>{{ $student->matricula }}</strong></div>
-                <div>Grupo: <strong>Grupo {{ $student->grupo->codigo_grupo }}</strong></div>
+                <div>Grupo: <strong>{{ $student->grupo->nombre_visible }}</strong></div>
                 <div>Fecha: <strong>{{ $attendance->fecha ? $attendance->fecha->format('d/m/Y') : date('d/m/Y') }}</strong></div>
                 <div>Hora Entrada: <strong>{{ $attendance->hora_entrada }}</strong></div>
                 @if($attendance->hora_salida)

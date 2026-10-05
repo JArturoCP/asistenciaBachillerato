@@ -21,7 +21,7 @@
                     <span class="fw-bold text-muted small text-uppercase">Estudiante Seleccionado:</span>
                     @foreach($students as $studentItem)
                         <a href="{{ route('parent.dashboard', ['student_id' => $studentItem->id]) }}" class="btn btn-sm {{ $selectedStudentId == $studentItem->id ? 'btn-primary font-weight-bold' : 'btn-outline-secondary' }}">
-                            <i class="bi bi-person-fill me-1"></i> {{ $studentItem->nombre_completo }} (Grupo {{ $studentItem->grupo->codigo_grupo }})
+                            <i class="bi bi-person-fill me-1"></i> {{ $studentItem->nombre_completo }} ({{ $studentItem->grupo?->nombre_visible ?? 'Sin grupo' }})
                         </a>
                     @endforeach
                 </div>
@@ -74,7 +74,7 @@
                             <div>
                                 <h5 class="fw-bold mb-0 text-dark">{{ $selectedStudent->nombre_completo }}</h5>
                                 <div class="text-muted small">Matrícula: <strong class="font-monospace text-dark">{{ $selectedStudent->matricula }}</strong></div>
-                                <span class="badge bg-primary mt-1">Grupo {{ $selectedStudent->grupo->codigo_grupo }} - Turno {{ ucfirst($selectedStudent->grupo->turno) }}</span>
+                                <span class="badge bg-primary mt-1">{{ $selectedStudent->grupo?->nombre_visible ?? 'Sin grupo' }} - Turno {{ ucfirst($selectedStudent->grupo->turno) }}</span>
                             </div>
                         </div>
 

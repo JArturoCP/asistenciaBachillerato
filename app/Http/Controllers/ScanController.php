@@ -87,7 +87,7 @@ class ScanController extends Controller
                     'student' => [
                         'name' => $student->nombre_completo,
                         'matricula' => $student->matricula,
-                        'group' => $student->grupo->codigo_grupo,
+                        'group' => $student->grupo->nombre_visible,
                     ],
                     'attendance' => [
                         'check_in' => $attendance->hora_entrada,
@@ -106,7 +106,7 @@ class ScanController extends Controller
                     'student' => [
                         'name' => $student->nombre_completo,
                         'matricula' => $student->matricula,
-                        'group' => $student->grupo->codigo_grupo,
+                        'group' => $student->grupo->nombre_visible,
                     ],
                     'attendance' => [
                         'check_in' => $attendance->hora_entrada,
@@ -133,7 +133,7 @@ class ScanController extends Controller
                     'student' => [
                         'name' => $student->nombre_completo,
                         'matricula' => $student->matricula,
-                        'group' => $student->grupo->codigo_grupo,
+                        'group' => $student->grupo->nombre_visible,
                     ],
                     'attendance' => [
                         'type' => 'checkout',
@@ -152,7 +152,7 @@ class ScanController extends Controller
                 'student' => [
                     'name' => $student->nombre_completo,
                     'matricula' => $student->matricula,
-                    'group' => $student->grupo->codigo_grupo,
+                    'group' => $student->grupo->nombre_visible,
                 ],
                 'attendance' => [
                     'check_in' => $attendance->hora_entrada,
@@ -190,7 +190,7 @@ class ScanController extends Controller
             'student' => [
                 'name' => $student->nombre_completo,
                 'matricula' => $student->matricula,
-                'group' => $student->grupo->codigo_grupo,
+                'group' => $student->grupo->nombre_visible,
             ],
             'attendance' => [
                 'type' => 'checkin',
@@ -231,7 +231,7 @@ class ScanController extends Controller
                 if ($whatsappEnabled && !empty($phone)) {
                     $tutorName = $guardian->user?->nombre_completo ?? 'Tutor';
                     $studentName = $student->nombre_completo;
-                    $group = $student->grupo->codigo_grupo ?? 'N/A';
+                    $group = $student->grupo?->nombre_visible ?? 'N/A';
                     $date = Carbon::parse($attendance->fecha)->format('d/m/Y');
                     $time = $type === 'salida' ? $attendance->hora_salida : $attendance->hora_entrada;
 

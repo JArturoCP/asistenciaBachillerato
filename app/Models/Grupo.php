@@ -34,6 +34,17 @@ class Grupo extends Model
         );
     }
 
+
+    /**
+     * Nombre que debe mostrarse en interfaces de usuario.
+     * Prioriza el valor almacenado en BD y conserva compatibilidad
+     * con registros anteriores a la columna nombre_grupo.
+     */
+    public function getNombreVisibleAttribute(): string
+    {
+        return $this->nombre_grupo ?: $this->nombre_credencial;
+    }
+
     public static function generarNombreAcademico(string $codigo, ?string $grado = null): string
     {
         $codigoNormalizado = strtoupper(trim($codigo));

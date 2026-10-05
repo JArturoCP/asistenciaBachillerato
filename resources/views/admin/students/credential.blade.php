@@ -411,7 +411,7 @@
                     <div class="student-subinfo">Matrícula: <strong class="text-dark font-monospace">{{ $student->matricula }}</strong></div>
 
                     <div class="d-flex justify-content-center gap-1 my-1">
-                        <span class="badge badge-guinda">{{ $student->grupo->nombre_grupo ?: $student->grupo->nombre_credencial }}</span>
+                        <span class="badge badge-guinda">{{ $student->grupo->nombre_visible }}</span>
                         <span class="badge badge-dorado">Matutino</span>
                     </div>
 

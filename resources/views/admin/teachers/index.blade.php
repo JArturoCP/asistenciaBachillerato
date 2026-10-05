@@ -75,7 +75,7 @@
                                         <i class="bi bi-book-half me-1"></i> {{ $assignment->materia?->nombre ?? 'Asignatura' }}
                                     </div>
                                     <div class="small text-dark mb-1">
-                                        <span class="badge bg-primary bg-opacity-10 text-primary me-1">Grupo {{ $assignment->grupo->codigo_grupo }}</span>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary me-1">{{ $assignment->grupo?->nombre_visible ?? 'Sin grupo' }}</span>
                                         <span class="badge bg-dark">{{ ucfirst($assignment->dia_semana) }}</span>
                                     </div>
                                     <div class="small text-muted mb-2">
@@ -136,7 +136,7 @@
                                                             <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                                                 @foreach($groups as $group)
                                                                     <option value="{{ $group->id }}" {{ old('group_id', $assignment->grupo_id) == $group->id ? 'selected' : '' }}>
-                                                                        Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
+                                                                        {{ $group->nombre_visible }}
                                                                     </option>
                                                                 @endforeach
                                                             </select>
@@ -426,7 +426,7 @@
                             <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                 <option value="">-- Seleccionar Grupo --</option>
                                 @foreach($groups as $group)
-                                    <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})</option>
+                                    <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>{{ $group->nombre_visible }}</option>
                                 @endforeach
                             </select>
                         </div>

@@ -305,7 +305,7 @@ class GeneralAttendanceController extends Controller
                 fputcsv($handle, [
                     $student->matricula,
                     $student->nombre_formateado,
-                    $student->grupo?->codigo_grupo ?? 'Sin grupo',
+                    $student->grupo?->nombre_visible ?? 'Sin grupo',
                     $date,
                     $att?->hora_entrada ?? 'N/A',
                     $att?->hora_salida ?? 'N/A',

@@ -23,7 +23,7 @@
                 <select name="schedule_id" class="form-select" onchange="this.form.submit()">
                     @forelse($classSchedules as $sched)
                         <option value="{{ $sched->id }}" {{ $selectedScheduleId == $sched->id ? 'selected' : '' }}>
-                            📚 Grupo {{ $sched->grupo?->codigo_grupo }} — {{ $sched->materia?->nombre }} | {{ ucfirst($sched->dia_semana) }} ({{ substr($sched->hora_inicio, 0, 5) }} - {{ substr($sched->hora_fin, 0, 5) }}) {{ $sched->aula ? '['.$sched->aula.']' : '' }} {{ $sched->docente?->nombre_completo ? '— Prof. '.$sched->docente->nombre_completo : '' }}
+                            📚 {{ $sched->grupo?->nombre_visible ?? 'Sin grupo' }} — {{ $sched->materia?->nombre }} | {{ ucfirst($sched->dia_semana) }} ({{ substr($sched->hora_inicio, 0, 5) }} - {{ substr($sched->hora_fin, 0, 5) }}) {{ $sched->aula ? '['.$sched->aula.']' : '' }} {{ $sched->docente?->nombre_completo ? '— Prof. '.$sched->docente->nombre_completo : '' }}
                         </option>
                     @empty
                         <option value="">No hay clases asignadas para este día de la semana</option>
@@ -54,7 +54,7 @@
                         <span class="badge bg-primary ms-2">{{ $selectedSchedule->materia?->clave }}</span>
                     </h5>
                     <div class="text-muted small">
-                        <strong>Grupo:</strong> {{ $selectedSchedule->grupo?->codigo_grupo }} (Turno {{ ucfirst($selectedSchedule->grupo?->turno) }}) | 
+                        <strong>Grupo:</strong> {{ $selectedSchedule->grupo?->nombre_visible ?? 'Sin grupo' }} (Turno {{ ucfirst($selectedSchedule->grupo?->turno) }}) | 
                         <strong>Día:</strong> {{ ucfirst($selectedSchedule->dia_semana) }} | 
                         <strong>Horario:</strong> {{ substr($selectedSchedule->hora_inicio, 0, 5) }} - {{ substr($selectedSchedule->hora_fin, 0, 5) }} hrs
                         @if($selectedSchedule->aula)

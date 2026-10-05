@@ -64,7 +64,7 @@
                                 @forelse($guardian->estudiantes as $student)
                                     <div class="badge bg-light text-dark border p-2 me-1 mb-1 d-inline-flex align-items-center">
                                         <i class="bi bi-mortarboard-fill text-primary me-1"></i>
-                                        <strong>{{ $student->nombre_completo }}</strong> &nbsp;({{ $student->grupo->codigo_grupo }})
+                                        <strong>{{ $student->nombre_completo }}</strong> &nbsp;({{ $student->grupo?->nombre_visible ?? 'Sin grupo' }})
                                         <form action="{{ route('admin.guardians.unlinkStudent', [$guardian->id, $student->id]) }}" method="POST" class="d-inline ms-2" onsubmit="return confirmDelete(event, '¿Desvincular a {{ $student->nombre_completo }} de este tutor?');">
                                             @csrf
                                             @method('DELETE')
@@ -292,7 +292,7 @@
                                     @else
                                         <option value="">-- Seleccionar Alumno --</option>
                                         @foreach($students as $student)
-                                            <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>{{ $student->nombre_completo }} ({{ $student->grupo->codigo_grupo }})</option>
+                                            <option value="{{ $student->id }}" {{ old('student_id') == $student->id ? 'selected' : '' }}>{{ $student->nombre_completo }} ({{ $student->grupo?->nombre_visible ?? 'Sin grupo' }})</option>
                                         @endforeach
                                     @endif
                                 </select>

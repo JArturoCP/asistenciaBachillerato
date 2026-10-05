@@ -35,7 +35,7 @@
 
   <div class="alert alert-info small mb-3">
     <i class="bi bi-info-circle me-1"></i>
-    El grupo puede escribirse como su código corto, por ejemplo <code>1-3</code>, o como <code>Grupo 1-3 (Turno Matutino)</code>. Si cargas temporalmente la plantilla integral anterior, las columnas de tutor serán ignoradas y <strong>no se guardará información de tutores</strong>.
+    El grupo puede escribirse con su nombre académico, por ejemplo <code>Primero-III</code>. El importador también conserva compatibilidad con los códigos técnicos existentes. Si cargas temporalmente la plantilla integral anterior, las columnas de tutor serán ignoradas y <strong>no se guardará información de tutores</strong>.
   </div>
 
   <p class="small text-muted mb-2">Fechas: <code>AAAA-MM-DD</code> o <code>DD/MM/AAAA</code>. Teléfonos: 10 dígitos o con prefijo +52. <code>estudiante_activo</code>: 1/0 o sí/no (en blanco = activo). El UUID de la credencial QR se genera automáticamente.</p>

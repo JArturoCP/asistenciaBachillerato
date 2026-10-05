@@ -32,7 +32,7 @@
                     <option value="">-- Todos los Grupos --</option>
                     @foreach($groups as $group)
                         <option value="{{ $group->id }}" {{ request('group_id') == $group->id ? 'selected' : '' }}>
-                            Grupo {{ $group->codigo_grupo }} ({{ ucfirst($group->turno) }})
+                            {{ $group->nombre_visible }}
                         </option>
                     @endforeach
                 </select>
@@ -81,7 +81,7 @@
                             </td>
                             <td>
                                 <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-20 px-2 py-1">
-                                    {{ $student->grupo->codigo_grupo }}
+                                    {{ $student->grupo?->nombre_visible ?? 'Sin asignación' }}
                                 </span>
                             </td>
                             <td>
@@ -183,7 +183,7 @@
                                                         <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                                             @foreach($groups as $group)
                                                                 <option value="{{ $group->id }}" {{ old('group_id', $student->grupo_id) == $group->id ? 'selected' : '' }}>
-                                                                    Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})
+                                                                    {{ $group->nombre_visible }}
                                                                 </option>
                                                             @endforeach
                                                         </select>
@@ -281,7 +281,7 @@
                             <select name="group_id" class="form-select @error('group_id') is-invalid @enderror" required>
                                 <option value="">-- Seleccionar Grupo --</option>
                                 @foreach($groups as $group)
-                                    <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>Grupo {{ $group->codigo_grupo }} (Turno {{ ucfirst($group->turno) }})</option>
+                                    <option value="{{ $group->id }}" {{ old('group_id') == $group->id ? 'selected' : '' }}>{{ $group->nombre_visible }}</option>
                                 @endforeach
                             </select>
                         </div>

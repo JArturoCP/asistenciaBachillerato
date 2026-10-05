@@ -321,7 +321,7 @@ class StudentCsvImportController extends Controller
                     'apellido_materno' => $d['apellido_materno'] ?: null,
                     'fecha_nacimiento' => $date ?: null,
                     'grupo_id' => $group->id,
-                    'grupo' => $group->codigo_grupo,
+                    'grupo' => $group->nombre_visible,
                     'estudiante_email' => $studentEmail ?: null,
                     'estudiante_telefono' => $studentPhone ?: null,
                     'estudiante_activo' => $active,
