@@ -14,7 +14,7 @@
     <style>
         /* Dedicated PVC ID Card Printer Specifications (5.4 cm width x 8.6 cm height) */
         @page {
-            size: 5.4cm 8.6cm;
+            size: 54mm 86mm;
             margin: 0;
         }
 
@@ -287,64 +287,76 @@
             color: #ffffff;
         }
 
-        /* Dedicated PVC ID Card Printer Rules: Enforce EXACT 2 PAGES output */
+        /* Print: 2 exact PVC pages, 54 mm x 86 mm, without screen scaling */
         @media print {
-            @page {
-                /* Igual al tamaño visual mostrado en navegador (escala 1.65x). */
-                size: 8.91cm 14.19cm;
-                margin: 0 !important;
-            }
             html, body {
-                width: 8.91cm !important;
-                height: 14.19cm !important;
+                width: 54mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #ffffff !important;
-                overflow: hidden !important;
+                overflow: visible !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
             }
-            .no-print, .no-print-bar, .card-side-label {
+
+            .no-print,
+            .no-print-bar,
+            .card-side-label {
                 display: none !important;
             }
+
             .credentials-wrapper {
                 display: block !important;
+                width: 54mm !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                gap: 0 !important;
                 transform: none !important;
-                margin: 0 !important;
-                padding: 0 !important;
-                width: 8.91cm !important;
-                height: 14.19cm !important;
             }
+
             .card-print-page {
-                width: 8.91cm !important;
-                height: 14.19cm !important;
+                display: block !important;
+                width: 54mm !important;
+                height: 86mm !important;
+                min-width: 54mm !important;
+                min-height: 86mm !important;
+                max-width: 54mm !important;
+                max-height: 86mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                overflow: hidden !important;
                 box-sizing: border-box !important;
+                overflow: hidden !important;
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
             }
+
             .card-print-page-front {
-                page-break-before: avoid !important;
-                break-before: avoid !important;
-                page-break-after: always !important;
                 break-after: page !important;
+                page-break-after: always !important;
             }
+
             .card-print-page-back {
-                page-break-before: always !important;
-                break-before: page !important;
-                page-break-after: avoid !important;
-                break-after: avoid !important;
+                break-before: auto !important;
+                page-break-before: auto !important;
+                break-after: auto !important;
+                page-break-after: auto !important;
             }
+
             .id-card {
-                width: 5.4cm !important;
-                height: 8.6cm !important;
-                border-radius: 0 !important;
-                box-shadow: none !important;
-                border: none !important;
+                width: 54mm !important;
+                height: 86mm !important;
+                min-width: 54mm !important;
+                min-height: 86mm !important;
+                max-width: 54mm !important;
+                max-height: 86mm !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                transform: scale(1.65) !important;
-                transform-origin: top left !important;
+                transform: none !important;
+                box-shadow: none !important;
+                box-sizing: border-box !important;
+                border-radius: 3.5mm !important;
+                border: 1.5px solid #D4AF37 !important;
+                overflow: hidden !important;
             }
         }
     </style>
@@ -353,11 +365,14 @@
 
     <div class="text-center no-print-bar no-print">
         <button onclick="window.print()" class="btn btn-gold btn-sm shadow px-3 py-2 fs-6">
-            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial (PDF 2 Páginas / mismo tamaño visual)
+            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial (2 páginas PVC 54 × 86 mm)
         </button>
         <button onclick="window.close()" class="btn btn-guinda btn-sm shadow ms-2 px-3 py-2 fs-6">
             <i class="bi bi-x-lg me-1"></i> Cerrar
         </button>
+        <div class="text-white-50 mt-2" style="font-size: .78rem;">
+            Al imprimir: escala 100 %, márgenes ninguno y desactivar encabezados/pies de página.
+        </div>
     </div>
 
     <!-- Credentials Container (Scaled on screen, 5.4 cm x 8.6 cm on print) -->
