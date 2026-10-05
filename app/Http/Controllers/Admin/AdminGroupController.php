@@ -35,6 +35,7 @@ class AdminGroupController extends Controller
 
         $group = Grupo::create([
             'codigo_grupo' => $validated['group_code'],
+            'nombre_grupo' => Grupo::generarNombreAcademico($validated['group_code'], $validated['grade']),
             'grado' => $validated['grade'],
             'turno' => $validated['shift'],
             'ciclo_escolar' => $validated['school_year'],
@@ -63,6 +64,7 @@ class AdminGroupController extends Controller
 
         $group->update([
             'codigo_grupo' => $validated['group_code'],
+            'nombre_grupo' => Grupo::generarNombreAcademico($validated['group_code'], $validated['grade']),
             'grado' => $validated['grade'],
             'turno' => $validated['shift'],
             'ciclo_escolar' => $validated['school_year'],

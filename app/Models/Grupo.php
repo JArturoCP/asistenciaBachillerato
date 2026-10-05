@@ -15,6 +15,7 @@ class Grupo extends Model
 
     protected $fillable = [
         'codigo_grupo',
+        'nombre_grupo',
         'grado',
         'turno',
         'ciclo_escolar',
@@ -22,17 +23,22 @@ class Grupo extends Model
 
 
     /**
-     * Nombre académico del grupo para credenciales.
-     * Ejemplos:
-     * G-1-2 => Primero-II
-     * G-3-1 => Tercer-I
+     * Nombre académico almacenado en BD.
+     * Ejemplos: G-1-2 => Primero-II, G-3-1 => Tercer-I.
      */
     public function getNombreCredencialAttribute(): string
     {
-        $codigo = strtoupper(trim((string) $this->codigo_grupo));
+        return $this->nombre_grupo ?: self::generarNombreAcademico(
+            (string) $this->codigo_grupo,
+            (string) $this->grado
+        );
+    }
 
-        // Acepta G-1-2 y también 1-2.
-        if (preg_match('/^(?:G-)?(\d+)-(\d+)$/', $codigo, $matches)) {
+    public static function generarNombreAcademico(string $codigo, ?string $grado = null): string
+    {
+        $codigoNormalizado = strtoupper(trim($codigo));
+
+        if (preg_match('/^(?:G-)?(\d+)-(\d+)$/', $codigoNormalizado, $matches)) {
             $gradoNumero = (int) $matches[1];
             $grupoNumero = (int) $matches[2];
 
@@ -40,18 +46,16 @@ class Grupo extends Model
                 1 => 'Primero',
                 2 => 'Segundo',
                 3 => 'Tercer',
-                default => $this->grado ?: (string) $gradoNumero,
+                default => $grado ?: (string) $gradoNumero,
             };
 
-            return $gradoTexto . '-' . $this->numeroARomano($grupoNumero);
+            return $gradoTexto.'-'.self::numeroARomano($grupoNumero);
         }
 
-        // Si el código no sigue el patrón esperado, conservar el código real
-        // para no mostrar información inventada.
-        return $this->codigo_grupo;
+        return trim($codigo) !== '' ? trim($codigo) : (string) $grado;
     }
 
-    private function numeroARomano(int $numero): string
+    private static function numeroARomano(int $numero): string
     {
         if ($numero <= 0) {
             return (string) $numero;

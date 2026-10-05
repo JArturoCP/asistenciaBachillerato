@@ -5,11 +5,9 @@
             <h2 class="h4 font-weight-bold text-dark mb-0">
                 <i class="bi bi-diagram-3 text-success me-2"></i> Gestión de Grupos Académicos
             </h2>
-            @can('groups.create')
             <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreateGroup">
                 <i class="bi bi-plus-circle me-1"></i> Nuevo Grupo
             </button>
-            @endcan
         </div>
 @endsection
 
@@ -22,6 +20,7 @@
                     <tr>
                         <th>#</th>
                         <th>Código del Grupo</th>
+                        <th>Nombre Académico</th>
                         <th>Grado / Semestre</th>
                         <th>Turno</th>
                         <th>Ciclo Escolar</th>
@@ -35,6 +34,7 @@
                         <tr>
                             <td>{{ $loop->iteration }}</td>
                             <td><span class="fw-bold text-dark">{{ $group->codigo_grupo }}</span></td>
+                            <td><span class="badge bg-light text-dark border">{{ $group->nombre_grupo ?: $group->nombre_credencial }}</span></td>
                             <td>{{ $group->grado }}° Bachillerato</td>
                             <td>
                                 <span class="badge {{ $group->turno === 'matutino' ? 'bg-warning text-dark' : 'bg-info text-white' }}">
@@ -49,12 +49,9 @@
                                 <span class="badge bg-light text-dark border">{{ $group->docente_grupos_count }} asignaciones</span>
                             </td>
                             <td class="text-end">
-                                @can('groups.edit')
                                 <button class="btn btn-outline-primary btn-sm me-1" data-bs-toggle="modal" data-bs-target="#modalEditGroup-{{ $group->id }}" title="Editar Grupo">
                                     <i class="bi bi-pencil"></i>
                                 </button>
-                                @endcan
-                                @can('groups.delete')
                                 <form action="{{ route('admin.groups.destroy', $group) }}" method="POST" class="d-inline" onsubmit="return confirmDelete(event, '¿Está seguro de eliminar el grupo {{ $group->codigo_grupo }}?');">
                                     @csrf
                                     @method('DELETE')
@@ -63,8 +60,6 @@
                                     </button>
                                 </form>
 
-                                @endcan
-                                @can('groups.edit')
                                 <!-- Modal Edit Group -->
                                 <div class="modal fade text-start" id="modalEditGroup-{{ $group->id }}" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog">
@@ -121,12 +116,11 @@
                                         </div>
                                     </div>
                                 </div>
-                                @endcan
                             </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center py-4 text-muted">
+                            <td colspan="9" class="text-center py-4 text-muted">
                                 <i class="bi bi-inbox fs-3 d-block mb-2"></i> No hay grupos registrados aún.
                             </td>
                         </tr>
@@ -136,7 +130,6 @@
         </div>
     </div>
 
-    @can('groups.create')
     <!-- Modal Create Group -->
     <div class="modal fade" id="modalCreateGroup" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog">
@@ -162,7 +155,7 @@
 
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Código del Grupo</label>
-                            <input type="text" name="group_code" class="form-control @error('group_code') is-invalid @enderror" value="{{ old('group_code') }}" placeholder="Ej. 1A-MAT" required>
+                            <input type="text" name="group_code" class="form-control @error('group_code') is-invalid @enderror" value="{{ old('group_code') }}" placeholder="Ej. G-1-2" required>
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-semibold">Grado / Semestre</label>
@@ -192,5 +185,4 @@
             </div>
         </div>
     </div>
-    @endcan
 @endsection

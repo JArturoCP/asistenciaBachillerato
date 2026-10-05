@@ -250,7 +250,7 @@ class StudentCsvImportController extends Controller
 
                 $group = $this->resolveGroup($d['grupo'], $groupLookup);
                 if (!$group) {
-                    $this->error($result, "Fila {$line}: grupo '{$d['grupo']}' inexistente. Se acepta el código corto (ej. 1-3) o 'Grupo 1-3 (Turno Matutino)'.");
+                    $this->error($result, "Fila {$line}: grupo '{$d['grupo']}' inexistente. Se acepta el código (ej. G-1-3), el nombre académico (ej. Primero-III) o la etiqueta completa del grupo.");
                 }
 
                 $date = $this->dateValue($d['fecha_nacimiento']);
@@ -367,9 +367,13 @@ class StudentCsvImportController extends Controller
         foreach ($groups as $group) {
             $aliases = [
                 $group->codigo_grupo,
+                $group->nombre_grupo,
                 'Grupo '.$group->codigo_grupo,
+                'Grupo '.$group->nombre_grupo,
                 'Grupo '.$group->codigo_grupo.' (Turno '.ucfirst($group->turno).')',
                 'Grupo '.$group->codigo_grupo.' (Turno '.$group->turno.')',
+                'Grupo '.$group->nombre_grupo.' (Turno '.ucfirst($group->turno).')',
+                'Grupo '.$group->nombre_grupo.' (Turno '.$group->turno.')',
             ];
 
             foreach ($aliases as $alias) {
