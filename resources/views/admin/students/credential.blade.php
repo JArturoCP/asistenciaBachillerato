@@ -250,6 +250,19 @@
             print-color-adjust: exact;
         }
 
+        .institutional-stamp-signature {
+            width: 100%;
+            max-height: 6.8cm;
+            object-fit: contain;
+            display: block;
+            margin: auto;
+        }
+
+        .id-card-back .id-card-body {
+            justify-content: center;
+            padding: 4px 5px;
+        }
+
         .btn-gold {
             background-color: #D4AF37;
             color: #3B0513;
@@ -277,12 +290,13 @@
         /* Dedicated PVC ID Card Printer Rules: Enforce EXACT 2 PAGES output */
         @media print {
             @page {
-                size: 5.4cm 8.6cm;
+                /* Igual al tamaño visual mostrado en navegador (escala 1.65x). */
+                size: 8.91cm 14.19cm;
                 margin: 0 !important;
             }
             html, body {
-                width: 5.4cm !important;
-                height: 8.6cm !important;
+                width: 8.91cm !important;
+                height: 14.19cm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 background: #ffffff !important;
@@ -298,12 +312,12 @@
                 transform: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
-                width: 5.4cm !important;
-                height: 8.6cm !important;
+                width: 8.91cm !important;
+                height: 14.19cm !important;
             }
             .card-print-page {
-                width: 5.4cm !important;
-                height: 8.6cm !important;
+                width: 8.91cm !important;
+                height: 14.19cm !important;
                 margin: 0 !important;
                 padding: 0 !important;
                 overflow: hidden !important;
@@ -329,6 +343,8 @@
                 border: none !important;
                 margin: 0 !important;
                 padding: 0 !important;
+                transform: scale(1.65) !important;
+                transform-origin: top left !important;
             }
         }
     </style>
@@ -337,7 +353,7 @@
 
     <div class="text-center no-print-bar no-print">
         <button onclick="window.print()" class="btn btn-gold btn-sm shadow px-3 py-2 fs-6">
-            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial (PDF 2 Páginas / PVC 5.4 cm x 8.6 cm)
+            <i class="bi bi-printer-fill me-1"></i> Imprimir Credencial (PDF 2 Páginas / mismo tamaño visual)
         </button>
         <button onclick="window.close()" class="btn btn-guinda btn-sm shadow ms-2 px-3 py-2 fs-6">
             <i class="bi bi-x-lg me-1"></i> Cerrar
@@ -409,40 +425,18 @@
 
                 <div class="id-card-header py-1">
                     <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.44rem;">Escuela Preparatoria Oficial No. 112</div>
-                    <div class="text-muted font-monospace" style="font-size: 0.38rem;">CCT: 15EBH0248W | Matutino y Vespertino</div>
+                    <div class="text-muted font-monospace" style="font-size: 0.38rem;">CCT: 15EBH0248W | Matutino</div>
                     <div class="badge badge-guinda mt-1" style="font-size: 0.38rem;">DATOS INSTITUCIONALES</div>
                 </div>
 
                 <div class="header-divider-gold"></div>
 
                 <div class="id-card-body p-2">
-                    <div class="school-info-box p-1 rounded bg-light border" style="font-size: 0.38rem; line-height: 1.15; color: #334155; width: 100%;">
-                        <div class="fw-bold text-dark mb-1"><i class="bi bi-info-circle-fill text-primary me-1"></i> Disposiciones Generales:</div>
-                        <ul class="ps-2 mb-0" style="padding-left: 10px !important;">
-                            <li>Esta credencial es <strong>personal e intransferible</strong>. Identifica al alumno activo.</li>
-                            <li>Indispensable para registro en <strong>SIGO 112</strong> y acceso al plantel.</li>
-                            <li>En caso de extravío, reportar a la dirección escolar.</li>
-                        </ul>
-                    </div>
-
-                    <div class="w-100 my-1" style="font-size: 0.38rem; color: #1e293b; text-align: left; line-height: 1.2;">
-                        <div><i class="bi bi-geo-alt-fill text-danger me-1"></i> <strong>Dirección:</strong> Av. Principal S/N, Coatepec Harinas, Méx.</div>
-                        <div><i class="bi bi-telephone-fill text-success me-1"></i> <strong>Teléfono:</strong> (723) 145-0112</div>
-                        <div><i class="bi bi-envelope-fill text-primary me-1"></i> <strong>Correo:</strong> epo112@edomex.gob.mx</div>
-                    </div>
-
-                    <div class="signature-section w-100 position-relative mt-2 pt-2">
-                        <div style="border-top: 1px dashed #70122B; width: 70%; margin: 0 auto 1px auto;"></div>
-                        <div class="fw-bold text-uppercase" style="font-size: 0.44rem; color: #4A0818;">
-                            Firma y Sello del Director(a)
-                        </div>
-                        <div class="text-muted fst-italic" style="font-size: 0.36rem;">
-                            Dirección Escolar — EPO 112
-                        </div>
-                        <div style="position: absolute; right: 0px; top: -2px; width: 28px; height: 28px; border: 1px dashed #D4AF37; border-radius: 50%; font-size: 0.32rem; font-weight: 700; color: #B8860B; background: rgba(212, 175, 55, 0.05); display: flex; align-items: center; justify-content: center;">
-                            SELLO
-                        </div>
-                    </div>
+                    <img
+                        src="{{ asset('images/sello_firma_credencial.jpg') }}"
+                        alt="Sello institucional y firma de Dirección Escolar"
+                        class="institutional-stamp-signature"
+                    >
                 </div>
 
                 <div class="privacy-badge">
