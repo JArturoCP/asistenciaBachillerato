@@ -411,8 +411,8 @@
                     <div class="student-subinfo">Matrícula: <strong class="text-dark font-monospace">{{ $student->matricula }}</strong></div>
 
                     <div class="d-flex justify-content-center gap-1 my-1">
-                        <span class="badge badge-guinda">G. {{ $student->grupo->codigo_grupo }}</span>
-                        <span class="badge badge-dorado">{{ ucfirst($student->grupo->turno) }}</span>
+                        <span class="badge badge-guinda">{{ $student->grupo->nombre_credencial }}</span>
+                        <span class="badge badge-dorado">Matutino</span>
                     </div>
 
                     <div class="qr-box">
@@ -440,7 +440,7 @@
 
                 <div class="id-card-header py-1">
                     <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.44rem;">Escuela Preparatoria Oficial No. 112</div>
-                    <div class="text-muted font-monospace" style="font-size: 0.38rem;">CCT: 15EBH0248W | Matutino</div>
+                    <div class="text-muted font-monospace" style="font-size: 0.38rem;">CCT: 15EBH0214P | Matutino</div>
                     <div class="badge badge-guinda mt-1" style="font-size: 0.38rem;">DATOS INSTITUCIONALES</div>
                 </div>
 
