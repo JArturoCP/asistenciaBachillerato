@@ -68,7 +68,7 @@
 
         .card-side-label {
             color: #D4AF37;
-            font-size: 0.75rem;
+            font-size: 0.82rem;
             font-weight: 700;
             letter-spacing: 0.8px;
             text-transform: uppercase;
@@ -121,14 +121,14 @@
 
         .header-school-name {
             color: #70122B;
-            font-size: 0.48rem;
+            font-size: 0.56rem;
             letter-spacing: 0.15px;
             line-height: 1.1;
             font-weight: 700;
         }
 
         .header-title {
-            font-size: 0.58rem;
+            font-size: 0.68rem;
             line-height: 1.05;
             margin-top: 2px;
             font-weight: 700;
@@ -137,7 +137,7 @@
 
         .header-cycle {
             color: #64748b;
-            font-size: 0.38rem;
+            font-size: 0.44rem;
             line-height: 1;
             display: block;
             margin-top: 2px;
@@ -196,7 +196,7 @@
         .student-role {
             margin-top: 3px;
             color: #70122B;
-            font-size: 0.36rem;
+            font-size: 0.42rem;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.35px;
@@ -211,7 +211,7 @@
         .student-name {
             color: #4A0818;
             font-weight: 700;
-            font-size: 0.60rem;
+            font-size: 0.72rem;
             line-height: 1.08;
             text-align: left;
             margin: 0 0 3px;
@@ -228,7 +228,7 @@
         .student-data-label {
             display: block;
             color: #7b8794;
-            font-size: 0.34rem;
+            font-size: 0.40rem;
             line-height: 1;
             text-transform: uppercase;
             letter-spacing: 0.2px;
@@ -238,7 +238,7 @@
         .student-data-value {
             display: block;
             color: #1e293b;
-            font-size: 0.44rem;
+            font-size: 0.52rem;
             line-height: 1.08;
             font-weight: 700;
             overflow-wrap: anywhere;
@@ -246,7 +246,7 @@
 
         .group-name {
             color: #70122B;
-            font-size: 0.48rem;
+            font-size: 0.58rem;
         }
 
         .shift-badge {
@@ -255,7 +255,7 @@
             color: #3B0513;
             border-radius: 8px;
             padding: 1px 5px;
-            font-size: 0.36rem;
+            font-size: 0.43rem;
             line-height: 1.25;
             font-weight: 700;
             margin-top: 1px;
@@ -295,7 +295,7 @@
         .qr-caption {
             margin-top: 2px;
             color: #64748b;
-            font-size: 0.31rem;
+            font-size: 0.36rem;
             line-height: 1;
             text-align: center;
             font-weight: 500;
@@ -315,7 +315,7 @@
 
         .seal-title {
             color: #70122B;
-            font-size: 0.42rem;
+            font-size: 0.50rem;
             line-height: 1;
             font-weight: 700;
             text-transform: uppercase;
@@ -376,7 +376,7 @@
 
         .director-label {
             color: #64748b;
-            font-size: 0.34rem;
+            font-size: 0.40rem;
             line-height: 1;
             text-transform: uppercase;
             letter-spacing: 0.25px;
@@ -386,7 +386,7 @@
         .director-name {
             margin-top: 2px;
             color: #4A0818;
-            font-size: 0.52rem;
+            font-size: 0.62rem;
             line-height: 1.1;
             font-weight: 700;
         }
@@ -395,7 +395,7 @@
             flex: 0 0 auto;
             background-color: #70122B;
             color: #F3C649;
-            font-size: 0.36rem;
+            font-size: 0.43rem;
             border-top: 1px solid #D4AF37;
             padding: 2px 3px;
             font-weight: 600;
@@ -597,13 +597,13 @@
                 <div class="top-stripe-gold"></div>
 
                 <div class="id-card-header py-1">
-                    <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.44rem;">
+                    <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.52rem;">
                         Escuela Preparatoria Oficial No. 112
                     </div>
-                    <div class="text-muted font-monospace" style="font-size: 0.38rem;">
+                    <div class="text-muted font-monospace" style="font-size: 0.45rem;">
                         CCT: 15EBH0214P | Matutino
                     </div>
-                    <div class="header-title" style="font-size: 0.45rem;">Datos Institucionales</div>
+                    <div class="header-title" style="font-size: 0.54rem;">Datos Institucionales</div>
                 </div>
 
                 <div class="header-divider-gold"></div>
