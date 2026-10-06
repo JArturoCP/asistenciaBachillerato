@@ -150,28 +150,26 @@
             width: 100%;
         }
 
-        /* Frente: dos columnas para aprovechar mejor el espacio PVC */
+        /* Frente: Bootstrap Grid. CSS sólo controla dimensiones físicas/visuales. */
         .front-body {
             flex: 1 1 auto;
             min-height: 0;
             padding: 5px 5px 6px;
-            display: grid;
-            grid-template-columns: 22mm 1fr;
-            gap: 4px;
-            align-items: stretch;
             background: #ffffff;
+            overflow: hidden;
+        }
+
+        .front-student-row {
+            min-height: 35mm;
         }
 
         .front-photo-column {
             min-width: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
         }
 
         .student-photo {
-            width: 20mm;
+            width: 100%;
+            max-width: 20mm;
             height: 27mm;
             object-fit: cover;
             object-position: center top;
@@ -182,7 +180,8 @@
         }
 
         .student-avatar-fallback {
-            width: 20mm;
+            width: 100%;
+            max-width: 20mm;
             height: 27mm;
             border-radius: 2mm;
             border: 1.5px solid #D4AF37;
@@ -195,22 +194,18 @@
         }
 
         .student-role {
-            margin-top: 4px;
+            margin-top: 3px;
             color: #70122B;
-            font-size: 0.39rem;
+            font-size: 0.36rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.35px;
             text-align: center;
         }
 
         .front-info-column {
             min-width: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: stretch;
-            justify-content: space-between;
-            padding: 1px 0;
+            padding-top: 1px;
         }
 
         .student-name {
@@ -256,7 +251,6 @@
 
         .shift-badge {
             display: inline-block;
-            align-self: flex-start;
             background: #D4AF37;
             color: #3B0513;
             border-radius: 8px;
@@ -267,12 +261,16 @@
             margin-top: 1px;
         }
 
+        .qr-row {
+            margin-top: 2px;
+        }
+
         .qr-area {
+            width: 100%;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-end;
-            margin-top: 2px;
+            justify-content: center;
         }
 
         .qr-box {
@@ -535,25 +533,26 @@
 
                 <div class="header-divider-gold"></div>
 
-                <div class="front-body">
-                    <div class="front-photo-column">
-                        @if($student->foto)
-                            <img
-                                src="{{ asset('storage/' . $student->foto) }}"
-                                alt="Foto de {{ $student->nombre_completo }}"
-                                class="student-photo"
-                            >
-                        @else
-                            <div class="student-avatar-fallback">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                        @endif
+                <div class="front-body container-fluid">
+                    {{-- FILA 1: fotografía + datos del estudiante --}}
+                    <div class="row g-1 align-items-start front-student-row">
+                        <div class="col-5 text-center front-photo-column">
+                            @if($student->foto)
+                                <img
+                                    src="{{ asset('storage/' . $student->foto) }}"
+                                    alt="Foto de {{ $student->nombre_completo }}"
+                                    class="student-photo img-fluid"
+                                >
+                            @else
+                                <div class="student-avatar-fallback mx-auto">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                            @endif
 
-                        <div class="student-role">Estudiante</div>
-                    </div>
+                            <div class="student-role">Estudiante</div>
+                        </div>
 
-                    <div class="front-info-column">
-                        <div>
+                        <div class="col-7 front-info-column">
                             <div class="student-name">{{ $student->nombre_completo }}</div>
 
                             <div class="student-data-box">
@@ -570,12 +569,17 @@
 
                             <span class="shift-badge">Matutino</span>
                         </div>
+                    </div>
 
-                        <div class="qr-area">
-                            <div class="qr-box">
-                                {!! $qrCodeSvg !!}
+                    {{-- FILA 2: QR a todo el ancho --}}
+                    <div class="row g-0 qr-row">
+                        <div class="col-12 text-center">
+                            <div class="qr-area">
+                                <div class="qr-box">
+                                    {!! $qrCodeSvg !!}
+                                </div>
+                                <div class="qr-caption">Acceso y registro de asistencia</div>
                             </div>
-                            <div class="qr-caption">Acceso y registro de asistencia</div>
                         </div>
                     </div>
                 </div>
