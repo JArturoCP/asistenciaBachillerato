@@ -84,6 +84,10 @@
             align-items: center;
         }
 
+        .id-card .text-muted {
+            color: #000000 !important;
+        }
+
         .id-card {
             width: 5.4cm;
             height: 8.6cm;
@@ -136,8 +140,9 @@
         }
 
         .header-cycle {
-            color: #64748b;
-            font-size: 0.44rem;
+            color: #000000;
+            font-size: 0.50rem;
+            font-weight: 600;
             line-height: 1;
             display: block;
             margin-top: 2px;
@@ -227,8 +232,9 @@
 
         .student-data-label {
             display: block;
-            color: #7b8794;
-            font-size: 0.40rem;
+            color: #000000;
+            font-size: 0.47rem;
+            font-weight: 700;
             line-height: 1;
             text-transform: uppercase;
             letter-spacing: 0.2px;
@@ -294,8 +300,8 @@
 
         .qr-caption {
             margin-top: 2px;
-            color: #64748b;
-            font-size: 0.36rem;
+            color: #000000;
+            font-size: 0.42rem;
             line-height: 1;
             text-align: center;
             font-weight: 500;
@@ -311,6 +317,13 @@
             align-items: center;
             justify-content: space-between;
             background: #ffffff;
+        }
+
+        .credential-cct {
+            color: #000000;
+            font-size: 0.52rem;
+            line-height: 1.05;
+            font-weight: 700;
         }
 
         .seal-title {
@@ -375,8 +388,8 @@
         }
 
         .director-label {
-            color: #64748b;
-            font-size: 0.40rem;
+            color: #000000;
+            font-size: 0.47rem;
             line-height: 1;
             text-transform: uppercase;
             letter-spacing: 0.25px;
@@ -600,7 +613,7 @@
                     <div class="text-uppercase header-school-name fw-bold" style="font-size: 0.52rem;">
                         Escuela Preparatoria Oficial No. 112
                     </div>
-                    <div class="text-muted font-monospace" style="font-size: 0.45rem;">
+                    <div class="font-monospace credential-cct">
                         CCT: 15EBH0214P | Matutino
                     </div>
                     <div class="header-title" style="font-size: 0.54rem;">Datos Institucionales</div>
