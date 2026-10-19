@@ -10,6 +10,11 @@
 @can('groups.view')<a class="nav-link text-white px-2" href="{{ route('admin.groups.index') }}">Grupos</a>@endcan
 @can('students.view')<a class="nav-link text-white px-2" href="{{ route('admin.students.index') }}">Estudiantes</a>@endcan
 @can('students.import')<a class="nav-link text-white px-2" href="{{ route('admin.students.import.index') }}">Importar CSV</a>@endcan
+@can('students.import')
+    @can('guardians.manage')
+        <a class="nav-link text-white px-2 {{ request()->routeIs('admin.students.tutors-import.*') ? 'bg-primary fw-bold rounded' : '' }}" href="{{ route('admin.students.tutors-import.index') }}"><i class="bi bi-person-hearts me-1"></i> Vincular tutores CSV</a>
+    @endcan
+@endcan
 @can('teachers.view')<a class="nav-link text-white px-2" href="{{ route('admin.teachers.index') }}">Docentes</a>@endcan
 @can('attendance.teachers.view')<a class="nav-link text-white px-2" href="{{ route('admin.teacher-attendance.index') }}">Asistencia docentes</a>@endcan
 @can('guardians.view')<a class="nav-link text-white px-2" href="{{ route('admin.guardians.index') }}">Tutores</a>@endcan
