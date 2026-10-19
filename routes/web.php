@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Admin\{AdminGroupController, AdminStudentController, AdminTeacherController, AdminGuardianController, AdminPendingRegistrationController, AdminTeacherAttendanceController, AccessUserController, AccessRoleController, StudentCsvImportController};
+use App\Http\Controllers\Admin\{AdminGroupController, AdminStudentController, AdminTeacherController, AdminGuardianController, AdminPendingRegistrationController, AdminTeacherAttendanceController, AccessUserController, AccessRoleController, StudentCsvImportController, StudentTutorCsvImportController};
 use App\Http\Controllers\{ScanController, GeneralAttendanceController, WhatsappController};
 use App\Http\Controllers\Teacher\TeacherAttendanceController;
 use App\Http\Controllers\Parent\ParentPortalController;
@@ -72,6 +72,16 @@ Route::middleware('auth')->prefix('admin')->name('admin.')->group(function () {
         Route::post('preview', [StudentCsvImportController::class, 'preview'])->name('preview');
         Route::post('commit', [StudentCsvImportController::class, 'commit'])->name('commit');
     });
+
+    Route::middleware(['can:students.import', 'can:guardians.manage'])
+        ->prefix('students/tutors/import')
+        ->name('students.tutors-import.')
+        ->group(function () {
+            Route::get('/', [StudentTutorCsvImportController::class, 'index'])->name('index');
+            Route::get('template', [StudentTutorCsvImportController::class, 'template'])->name('template');
+            Route::post('preview', [StudentTutorCsvImportController::class, 'preview'])->name('preview');
+            Route::post('commit', [StudentTutorCsvImportController::class, 'commit'])->name('commit');
+        });
 
     Route::get('teachers', [AdminTeacherController::class, 'index'])->middleware('can:teachers.view')->name('teachers.index');
     Route::get('teachers/{teacher}/credential', [AdminTeacherController::class, 'showCredential'])->middleware('can:teachers.view')->name('teachers.credential');

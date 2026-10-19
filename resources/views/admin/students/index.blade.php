@@ -7,7 +7,10 @@
             </h2>
             <div class="d-flex gap-2">
                 @can('students.import')
-                <a class="btn btn-outline-success btn-sm" href="{{ route('admin.students.import.index') }}"><i class="bi bi-filetype-csv me-1"></i> Importar CSV</a>
+                <a class="btn btn-outline-success btn-sm" href="{{ route('admin.students.import.index') }}"><i class="bi bi-filetype-csv me-1"></i> Importar estudiantes</a>
+                    @can('guardians.manage')
+                    <a class="btn btn-outline-primary btn-sm" href="{{ route('admin.students.tutors-import.index') }}"><i class="bi bi-people-fill me-1"></i> Vincular tutores CSV</a>
+                    @endcan
                 @endcan
                 @can('students.create')
                 <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#modalCreateStudent"><i class="bi bi-person-plus me-1"></i> Registrar Estudiante</button>
