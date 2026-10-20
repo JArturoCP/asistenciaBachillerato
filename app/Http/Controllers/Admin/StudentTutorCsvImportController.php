@@ -119,6 +119,7 @@ class StudentTutorCsvImportController extends Controller
         $stats = [
             'tutors_created' => 0,
             'tutors_reused' => 0,
+            'tutors_restored' => 0,
             'links_created' => 0,
             'links_existing' => 0,
         ];
@@ -130,21 +131,35 @@ class StudentTutorCsvImportController extends Controller
                 // Crear o bloquear cada tutor una sola vez, incluso si tiene varios hijos.
                 foreach ($result['guardians'] as $key => $profile) {
                     if ($profile['existing_id']) {
-                        $guardian = Tutor::with('user')
+                        $guardian = Tutor::withTrashed()
+                            ->with(['user' => fn ($q) => $q->withTrashed()])
                             ->whereKey($profile['existing_id'])
                             ->lockForUpdate()
                             ->firstOrFail();
 
                         if (!$guardian->user
-                            || $guardian->trashed()
-                            || $guardian->user->trashed()
                             || !$guardian->user->is_approved
                             || !in_array($guardian->user->role, ['parent', 'tutor'], true)) {
-                            throw new \RuntimeException('Un tutor existente cambió de estado durante la confirmación.');
+                            throw new \RuntimeException('Un tutor existente cambió a un estado incompatible durante la confirmación.');
                         }
 
-                        // Importante: NO actualizar los datos del tutor existente con el CSV.
-                        $stats['tutors_reused']++;
+                        // Si el tutor fue eliminado suavemente, se reactiva el mismo registro.
+                        // Nunca se crea un duplicado y nunca se sobrescriben sus datos con el CSV.
+                        $restored = false;
+                        if ($guardian->user->trashed()) {
+                            $guardian->user->restore();
+                            $restored = true;
+                        }
+                        if ($guardian->trashed()) {
+                            $guardian->restore();
+                            $restored = true;
+                        }
+
+                        if ($restored) {
+                            $stats['tutors_restored']++;
+                        } else {
+                            $stats['tutors_reused']++;
+                        }
                     } else {
                         if ($profile['email'] && User::withTrashed()->where('email', $profile['email'])->exists()) {
                             throw new \RuntimeException('Un correo de tutor fue registrado mientras se confirmaba el archivo.');
@@ -194,8 +209,21 @@ class StudentTutorCsvImportController extends Controller
                         ->exists();
 
                     if ($alreadyLinked) {
+                        // Vínculo existente: se ignora completamente. No se toca
+                        // fecha_verificacion, consentimiento ni ningún dato del tutor/alumno.
                         $stats['links_existing']++;
                         continue;
+                    }
+
+                    $linkedToAnotherTutor = DB::table('estudiante_tutor')
+                        ->where('estudiante_id', $student->id)
+                        ->where('tutor_id', '!=', $guardian->id)
+                        ->exists();
+
+                    if ($linkedToAnotherTutor) {
+                        throw new \RuntimeException(
+                            "El estudiante {$student->nombre_completo} fue vinculado a otro tutor después de la vista previa."
+                        );
                     }
 
                     $guardian->estudiantes()->attach($student->id, [
@@ -219,13 +247,13 @@ class StudentTutorCsvImportController extends Controller
             'WRITE',
             'tutores',
             null,
-            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados. No se modificaron alumnos. Operador ".$request->user()->id
+            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados; {$stats['tutors_restored']} tutores restaurados. No se modificaron alumnos. Operador ".$request->user()->id
         );
 
         return redirect()
             ->route('admin.students.index')
             ->with('success',
-                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos y {$stats['tutors_reused']} reutilizados. Ningún alumno fue sobrescrito."
+                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos, {$stats['tutors_reused']} reutilizados y {$stats['tutors_restored']} restaurados. Ningún alumno fue sobrescrito."
             );
     }
 
@@ -243,6 +271,7 @@ class StudentTutorCsvImportController extends Controller
             'students_matched' => 0,
             'tutors_new' => 0,
             'tutors_existing' => 0,
+            'tutors_to_restore' => 0,
             'links_new' => 0,
             'links_existing' => 0,
         ];
@@ -427,6 +456,7 @@ class StudentTutorCsvImportController extends Controller
                     'telefono' => $tutorPhone ?: null,
                     'correo_notificaciones' => $notificationEmail ?: ($tutorEmail ?: null),
                     'existing_id' => null,
+                    'restore_needed' => false,
                 ];
 
                 $tutorKey = $profile['email']
@@ -514,7 +544,8 @@ class StudentTutorCsvImportController extends Controller
                 $rows[] = $row;
             }
 
-            // Detectar relaciones ya existentes sin alterar fecha_verificacion.
+            // Detectar relaciones existentes. La tabla pivote no usa soft delete:
+            // si el vínculo ya existe, se ignora y NO se modifica fecha_verificacion.
             $studentIds = array_values(array_unique(array_column($rows, 'student_id')));
             $existingTutorIds = array_values(array_unique(array_filter(array_map(
                 fn ($p) => $p['existing_id'] ?? null,
@@ -522,12 +553,13 @@ class StudentTutorCsvImportController extends Controller
             ))));
 
             $existingPairs = [];
-            if ($studentIds && $existingTutorIds) {
+            $studentExistingTutors = [];
+            if ($studentIds) {
                 foreach (DB::table('estudiante_tutor')
                     ->whereIn('estudiante_id', $studentIds)
-                    ->whereIn('tutor_id', $existingTutorIds)
                     ->get(['estudiante_id', 'tutor_id']) as $pivot) {
                     $existingPairs[$pivot->estudiante_id.'|'.$pivot->tutor_id] = true;
+                    $studentExistingTutors[$pivot->estudiante_id][] = (int) $pivot->tutor_id;
                 }
             }
 
@@ -540,19 +572,45 @@ class StudentTutorCsvImportController extends Controller
                 ])));
 
                 if ($profile['existing_id']) {
-                    $row['tutor_estado'] = 'Tutor existente';
+                    $row['tutor_estado'] = $profile['restore_needed']
+                        ? 'Tutor eliminado — se restaurará'
+                        : 'Tutor existente';
+
                     $pair = $row['student_id'].'|'.$profile['existing_id'];
                     if (isset($existingPairs[$pair])) {
-                        $row['vinculo_estado'] = 'Ya vinculado';
+                        $row['vinculo_estado'] = 'Ya vinculado — se ignorará';
                         $result['links_existing']++;
                     } else {
-                        $row['vinculo_estado'] = 'Se vinculará';
-                        $result['links_new']++;
+                        $otherTutorIds = array_values(array_filter(
+                            $studentExistingTutors[$row['student_id']] ?? [],
+                            fn ($id) => (int) $id !== (int) $profile['existing_id']
+                        ));
+
+                        if ($otherTutorIds) {
+                            $this->error(
+                                $result,
+                                "Fila {$row['line']}: el estudiante {$row['estudiante']} ya está vinculado con otro tutor. No se reemplazará ni agregará un segundo tutor automáticamente."
+                            );
+                            $row['vinculo_estado'] = 'Conflicto: ya tiene otro tutor';
+                        } else {
+                            $row['vinculo_estado'] = 'Se vinculará';
+                            $result['links_new']++;
+                        }
                     }
                 } else {
-                    $row['tutor_estado'] = 'Tutor nuevo';
-                    $row['vinculo_estado'] = 'Se creará y vinculará';
-                    $result['links_new']++;
+                    // También respetar la regla actual del sistema: un tutor por estudiante.
+                    if (!empty($studentExistingTutors[$row['student_id']])) {
+                        $this->error(
+                            $result,
+                            "Fila {$row['line']}: el estudiante {$row['estudiante']} ya tiene un tutor vinculado. No se creará otro tutor ni se sustituirá la relación."
+                        );
+                        $row['tutor_estado'] = 'Tutor nuevo';
+                        $row['vinculo_estado'] = 'Conflicto: ya tiene otro tutor';
+                    } else {
+                        $row['tutor_estado'] = 'Tutor nuevo';
+                        $row['vinculo_estado'] = 'Se creará y vinculará';
+                        $result['links_new']++;
+                    }
                 }
             }
             unset($row);
@@ -640,35 +698,35 @@ class StudentTutorCsvImportController extends Controller
             fn ($p) => $p['email'] ?? null,
             $result['guardians']
         ))));
-        $phones = array_values(array_unique(array_filter(array_map(
-            fn ($p) => $p['telefono'] ?? null,
-            $result['guardians']
-        ))));
-
+        // El correo de users es el identificador más fuerte. Incluir eliminados suaves
+        // permite reutilizar y restaurar el mismo tutor en lugar de crear duplicados.
         $usersByEmail = User::withTrashed()
             ->with(['tutor' => fn ($q) => $q->withTrashed()])
             ->whereIn('email', $emails ?: ['--sin-correos--'])
             ->get()
-            ->keyBy(fn ($u) => mb_strtolower((string) $u->email, 'UTF-8'));
+            ->keyBy(fn ($u) => mb_strtolower(trim((string) $u->email), 'UTF-8'));
 
-        $tutorsByPhone = Tutor::withTrashed()
+        // Buscar también por datos propios del tutor, incluyendo eliminados suaves.
+        // Se cargan incluyendo eliminados suaves para poder normalizar teléfonos
+        // aun cuando en registros históricos tengan espacios, +52, guiones, etc.
+        $candidateTutors = Tutor::withTrashed()
             ->with(['user' => fn ($q) => $q->withTrashed()])
-            ->whereIn('telefono', $phones ?: ['--sin-telefonos--'])
-            ->get()
-            ->groupBy('telefono');
+            ->get();
 
         foreach ($result['guardians'] as $key => &$profile) {
             $found = null;
 
+            // 1) Correo de cuenta: si coincide, se considera el mismo tutor.
+            // Las diferencias de nombre se advierten, pero NO provocan un duplicado.
             if ($profile['email']) {
                 $user = $usersByEmail->get($profile['email']);
                 if ($user) {
-                    if ($user->trashed()
-                        || !in_array($user->role, ['parent', 'tutor'], true)
-                        || !$user->tutor
-                        || $user->tutor->trashed()
-                        || !$user->is_approved) {
-                        $this->error($result, "El correo {$profile['email']} ya pertenece a una cuenta que no puede reutilizarse como tutor.");
+                    if (!in_array($user->role, ['parent', 'tutor'], true) || !$user->tutor) {
+                        $this->error($result, "El correo {$profile['email']} ya pertenece a una cuenta que no es un tutor reutilizable.");
+                        continue;
+                    }
+                    if (!$user->is_approved) {
+                        $this->error($result, "El tutor {$profile['email']} existe, pero su cuenta no está aprobada. Revise el registro antes de vincularlo.");
                         continue;
                     }
 
@@ -678,28 +736,60 @@ class StudentTutorCsvImportController extends Controller
                         'apellido_paterno' => $user->apellido_paterno,
                         'apellido_materno' => $user->apellido_materno,
                     ]) !== $this->personKey($profile)) {
-                        $this->error($result, "El correo {$profile['email']} pertenece a un tutor existente con un nombre diferente. Revise el archivo antes de relacionarlo.");
-                        continue;
-                    }
-
-                    if ($profile['telefono'] && $found->telefono && $profile['telefono'] !== $found->telefono) {
-                        $this->warning($result, "Tutor {$profile['email']}: el teléfono del CSV difiere de la ficha existente. Se conservará el teléfono actual; no se sobrescribirá.");
+                        $this->warning($result, "Tutor {$profile['email']}: el nombre del CSV difiere del registro existente. Se reutilizará el tutor existente y no se sobrescribirán sus datos.");
                     }
                 }
             }
 
-            if (!$found && $profile['telefono']) {
-                $matches = ($tutorsByPhone->get($profile['telefono']) ?? collect())
-                    ->filter(function ($tutor) use ($profile) {
-                        if (!$tutor->user) {
-                            return false;
-                        }
-                        return $this->personKey([
+            // 2) Correo de notificaciones + nombre, útil para registros antiguos donde
+            // correo_notificaciones y users.email no son iguales.
+            if (!$found && ($profile['correo_notificaciones'] || $profile['email'])) {
+                $emailCandidates = array_values(array_unique(array_filter([
+                    $profile['correo_notificaciones'],
+                    $profile['email'],
+                ])));
+
+                $matches = $candidateTutors->filter(function ($tutor) use ($profile, $emailCandidates) {
+                    if (!$tutor->user || !in_array($tutor->user->role, ['parent', 'tutor'], true)) {
+                        return false;
+                    }
+                    $stored = mb_strtolower(trim((string) $tutor->correo_notificaciones), 'UTF-8');
+                    return $stored !== ''
+                        && in_array($stored, $emailCandidates, true)
+                        && $this->personKey([
                             'nombre' => $tutor->user->nombre,
                             'apellido_paterno' => $tutor->user->apellido_paterno,
                             'apellido_materno' => $tutor->user->apellido_materno,
                         ]) === $this->personKey($profile);
-                    });
+                });
+
+                if ($matches->count() > 1) {
+                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: hay más de una coincidencia por correo de notificaciones y nombre.");
+                    continue;
+                }
+                if ($matches->count() === 1) {
+                    $found = $matches->first();
+                }
+            }
+
+            // 3) Teléfono + nombre completo.
+            if (!$found && $profile['telefono']) {
+                $matches = $candidateTutors->filter(function ($tutor) use ($profile) {
+                    if (!$tutor->user || !in_array($tutor->user->role, ['parent', 'tutor'], true)) {
+                        return false;
+                    }
+
+                    $storedPhone = $this->phoneValue((string) ($tutor->telefono ?: $tutor->user->phone));
+                    if ($storedPhone === false || $storedPhone === null || $storedPhone !== $profile['telefono']) {
+                        return false;
+                    }
+
+                    return $this->personKey([
+                        'nombre' => $tutor->user->nombre,
+                        'apellido_paterno' => $tutor->user->apellido_paterno,
+                        'apellido_materno' => $tutor->user->apellido_materno,
+                    ]) === $this->personKey($profile);
+                });
 
                 if ($matches->count() > 1) {
                     $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: hay más de una coincidencia por nombre y teléfono.");
@@ -707,27 +797,35 @@ class StudentTutorCsvImportController extends Controller
                 }
 
                 if ($matches->count() === 1) {
-                    $candidate = $matches->first();
-                    if ($candidate->trashed()
-                        || !$candidate->user
-                        || $candidate->user->trashed()
-                        || !$candidate->user->is_approved
-                        || !in_array($candidate->user->role, ['parent', 'tutor'], true)) {
-                        $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: la coincidencia existente está dada de baja o no autorizada.");
-                        continue;
-                    }
-
-                    if ($profile['email'] && $candidate->user->email
-                        && mb_strtolower($candidate->user->email, 'UTF-8') !== $profile['email']) {
+                    $found = $matches->first();
+                    if ($profile['email'] && $found->user->email
+                        && mb_strtolower(trim((string) $found->user->email), 'UTF-8') !== $profile['email']) {
                         $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: el correo del CSV difiere del registro existente. Se reutilizará el tutor y se conservará su correo actual.");
                     }
-                    $found = $candidate;
                 }
             }
 
             if ($found) {
+                if (!$found->user || !$found->user->is_approved) {
+                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: existe, pero su cuenta no está aprobada.");
+                    continue;
+                }
+
                 $profile['existing_id'] = $found->id;
+                $profile['restore_needed'] = $found->trashed() || $found->user->trashed();
                 $result['tutors_existing']++;
+
+                if ($profile['restore_needed']) {
+                    $result['tutors_to_restore']++;
+                    $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: existe con eliminación suave; se restaurará el mismo registro y no se crearán duplicados.");
+                }
+
+                if ($profile['telefono'] && $found->telefono) {
+                    $storedPhone = $this->phoneValue((string) $found->telefono);
+                    if ($storedPhone && $storedPhone !== $profile['telefono']) {
+                        $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: el teléfono del CSV difiere de la ficha existente. Se conservará el teléfono actual.");
+                    }
+                }
             } else {
                 $result['tutors_new']++;
             }

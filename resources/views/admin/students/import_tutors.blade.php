@@ -44,6 +44,8 @@
                     <li>Primero por <strong>correo electrónico</strong>.</li>
                     <li>Si no hay coincidencia, por <strong>teléfono + nombre completo</strong>.</li>
                     <li>Si ya existe, sólo se relaciona. Sus datos actuales no se sobrescriben.</li>
+                    <li>Si existe con eliminación suave, se <strong>restaura el mismo tutor</strong> y luego se relaciona.</li>
+                    <li>Si la relación alumno-tutor ya existe, se <strong>ignora</strong>; no se duplica ni se modifica.</li>
                     <li>Si no existe, se crea y posteriormente se vincula.</li>
                 </ol>
             </div>
@@ -79,6 +81,7 @@
         <div class="col-md-3"><div class="border rounded p-2"><strong>Alumnos localizados:</strong> {{ $preview['students_matched'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Tutores nuevos:</strong> {{ $preview['tutors_new'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Tutores existentes:</strong> {{ $preview['tutors_existing'] }}</div></div>
+        <div class="col-md-3"><div class="border rounded p-2"><strong>A restaurar:</strong> {{ $preview['tutors_to_restore'] ?? 0 }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Vínculos nuevos:</strong> {{ $preview['links_new'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Ya vinculados:</strong> {{ $preview['links_existing'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Advertencias:</strong> {{ $preview['total_warnings'] }}</div></div>
@@ -136,14 +139,20 @@
                         <td>{{ $row['grupo'] }}</td>
                         <td>{{ $row['tutor'] }}</td>
                         <td>
-                            <span class="badge {{ $row['tutor_estado'] === 'Tutor existente' ? 'bg-info text-dark' : 'bg-primary' }}">
-                                {{ $row['tutor_estado'] }}
-                            </span>
+                            @php
+                                $tutorBadge = str_contains($row['tutor_estado'], 'restaurará')
+                                    ? 'bg-warning text-dark'
+                                    : ($row['tutor_estado'] === 'Tutor existente' ? 'bg-info text-dark' : 'bg-primary');
+                            @endphp
+                            <span class="badge {{ $tutorBadge }}">{{ $row['tutor_estado'] }}</span>
                         </td>
                         <td>
-                            <span class="badge {{ $row['vinculo_estado'] === 'Ya vinculado' ? 'bg-secondary' : 'bg-success' }}">
-                                {{ $row['vinculo_estado'] }}
-                            </span>
+                            @php
+                                $vinculoBadge = str_starts_with($row['vinculo_estado'], 'Ya vinculado')
+                                    ? 'bg-secondary'
+                                    : (str_starts_with($row['vinculo_estado'], 'Conflicto') ? 'bg-danger' : 'bg-success');
+                            @endphp
+                            <span class="badge {{ $vinculoBadge }}">{{ $row['vinculo_estado'] }}</span>
                         </td>
                     </tr>
                     @endforeach
