@@ -120,6 +120,7 @@ class StudentTutorCsvImportController extends Controller
             'tutors_created' => 0,
             'tutors_reused' => 0,
             'tutors_restored' => 0,
+            'tutors_approved' => 0,
             'links_created' => 0,
             'links_existing' => 0,
         ];
@@ -138,7 +139,6 @@ class StudentTutorCsvImportController extends Controller
                             ->firstOrFail();
 
                         if (!$guardian->user
-                            || !$guardian->user->is_approved
                             || !in_array($guardian->user->role, ['parent', 'tutor'], true)) {
                             throw new \RuntimeException('Un tutor existente cambió a un estado incompatible durante la confirmación.');
                         }
@@ -153,6 +153,15 @@ class StudentTutorCsvImportController extends Controller
                         if ($guardian->trashed()) {
                             $guardian->restore();
                             $restored = true;
+                        }
+
+                        // Los tutores procesados mediante CSV quedan aprobados por defecto.
+                        // Si la cuenta ya existía pero estaba pendiente, se reutiliza y se aprueba;
+                        // nunca se crea un usuario duplicado por este motivo.
+                        if (!$guardian->user->is_approved) {
+                            $guardian->user->is_approved = true;
+                            $guardian->user->save();
+                            $stats['tutors_approved']++;
                         }
 
                         if ($restored) {
@@ -247,13 +256,13 @@ class StudentTutorCsvImportController extends Controller
             'WRITE',
             'tutores',
             null,
-            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados; {$stats['tutors_restored']} tutores restaurados. No se modificaron alumnos. Operador ".$request->user()->id
+            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados; {$stats['tutors_restored']} tutores restaurados; {$stats['tutors_approved']} cuentas de tutor aprobadas. No se modificaron alumnos. Operador ".$request->user()->id
         );
 
         return redirect()
             ->route('admin.students.index')
             ->with('success',
-                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos, {$stats['tutors_reused']} reutilizados y {$stats['tutors_restored']} restaurados. Ningún alumno fue sobrescrito."
+                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos, {$stats['tutors_reused']} reutilizados, {$stats['tutors_restored']} restaurados y {$stats['tutors_approved']} aprobados. Ningún alumno fue sobrescrito."
             );
     }
 
@@ -272,6 +281,7 @@ class StudentTutorCsvImportController extends Controller
             'tutors_new' => 0,
             'tutors_existing' => 0,
             'tutors_to_restore' => 0,
+            'tutors_to_approve' => 0,
             'links_new' => 0,
             'links_existing' => 0,
         ];
@@ -457,6 +467,7 @@ class StudentTutorCsvImportController extends Controller
                     'correo_notificaciones' => $notificationEmail ?: ($tutorEmail ?: null),
                     'existing_id' => null,
                     'restore_needed' => false,
+                    'approve_needed' => false,
                 ];
 
                 $tutorKey = $profile['email']
@@ -572,9 +583,15 @@ class StudentTutorCsvImportController extends Controller
                 ])));
 
                 if ($profile['existing_id']) {
-                    $row['tutor_estado'] = $profile['restore_needed']
-                        ? 'Tutor eliminado — se restaurará'
-                        : 'Tutor existente';
+                    if ($profile['restore_needed'] && $profile['approve_needed']) {
+                        $row['tutor_estado'] = 'Tutor eliminado — se restaurará y aprobará';
+                    } elseif ($profile['restore_needed']) {
+                        $row['tutor_estado'] = 'Tutor eliminado — se restaurará';
+                    } elseif ($profile['approve_needed']) {
+                        $row['tutor_estado'] = 'Tutor existente — se aprobará';
+                    } else {
+                        $row['tutor_estado'] = 'Tutor existente';
+                    }
 
                     $pair = $row['student_id'].'|'.$profile['existing_id'];
                     if (isset($existingPairs[$pair])) {
@@ -725,11 +742,6 @@ class StudentTutorCsvImportController extends Controller
                         $this->error($result, "El correo {$profile['email']} ya pertenece a una cuenta que no es un tutor reutilizable.");
                         continue;
                     }
-                    if (!$user->is_approved) {
-                        $this->error($result, "El tutor {$profile['email']} existe, pero su cuenta no está aprobada. Revise el registro antes de vincularlo.");
-                        continue;
-                    }
-
                     $found = $user->tutor;
                     if ($this->personKey([
                         'nombre' => $user->nombre,
@@ -806,14 +818,20 @@ class StudentTutorCsvImportController extends Controller
             }
 
             if ($found) {
-                if (!$found->user || !$found->user->is_approved) {
-                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: existe, pero su cuenta no está aprobada.");
+                if (!$found->user) {
+                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: el registro no tiene una cuenta de usuario asociada.");
                     continue;
                 }
 
                 $profile['existing_id'] = $found->id;
                 $profile['restore_needed'] = $found->trashed() || $found->user->trashed();
+                $profile['approve_needed'] = !$found->user->is_approved;
                 $result['tutors_existing']++;
+
+                if ($profile['approve_needed']) {
+                    $result['tutors_to_approve']++;
+                    $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: la cuenta existe pero está pendiente; se aprobará automáticamente al confirmar el CSV.");
+                }
 
                 if ($profile['restore_needed']) {
                     $result['tutors_to_restore']++;

@@ -43,7 +43,8 @@
                 <ol class="mb-0 ps-3">
                     <li>Primero por <strong>correo electrónico</strong>.</li>
                     <li>Si no hay coincidencia, por <strong>teléfono + nombre completo</strong>.</li>
-                    <li>Si ya existe, sólo se relaciona. Sus datos actuales no se sobrescriben.</li>
+                    <li>Si ya existe, sólo se reutiliza y relaciona. Sus datos actuales no se sobrescriben.</li>
+                    <li>Si su cuenta está pendiente de aprobación, se <strong>aprueba automáticamente</strong> al confirmar la carga.</li>
                     <li>Si existe con eliminación suave, se <strong>restaura el mismo tutor</strong> y luego se relaciona.</li>
                     <li>Si la relación alumno-tutor ya existe, se <strong>ignora</strong>; no se duplica ni se modifica.</li>
                     <li>Si no existe, se crea y posteriormente se vincula.</li>
@@ -54,7 +55,7 @@
 
     <div class="alert alert-warning small">
         <i class="bi bi-exclamation-triangle me-1"></i>
-        La vinculación no equivale al consentimiento para notificaciones. Los tutores nuevos se crean con alertas desactivadas y
+        La vinculación no equivale al consentimiento para notificaciones. Los tutores creados o reutilizados por CSV quedan <strong>aprobados para acceder al sistema</strong>, pero las alertas permanecen desactivadas y
         <code>fecha_verificacion</code> pendiente. Si el vínculo ya existe, no se modifica su fecha de verificación.
     </div>
 
@@ -82,6 +83,7 @@
         <div class="col-md-3"><div class="border rounded p-2"><strong>Tutores nuevos:</strong> {{ $preview['tutors_new'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Tutores existentes:</strong> {{ $preview['tutors_existing'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>A restaurar:</strong> {{ $preview['tutors_to_restore'] ?? 0 }}</div></div>
+        <div class="col-md-3"><div class="border rounded p-2"><strong>A aprobar:</strong> {{ $preview['tutors_to_approve'] ?? 0 }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Vínculos nuevos:</strong> {{ $preview['links_new'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Ya vinculados:</strong> {{ $preview['links_existing'] }}</div></div>
         <div class="col-md-3"><div class="border rounded p-2"><strong>Advertencias:</strong> {{ $preview['total_warnings'] }}</div></div>
@@ -140,7 +142,7 @@
                         <td>{{ $row['tutor'] }}</td>
                         <td>
                             @php
-                                $tutorBadge = str_contains($row['tutor_estado'], 'restaurará')
+                                $tutorBadge = str_contains($row['tutor_estado'], 'restaurará') || str_contains($row['tutor_estado'], 'aprobará')
                                     ? 'bg-warning text-dark'
                                     : ($row['tutor_estado'] === 'Tutor existente' ? 'bg-info text-dark' : 'bg-primary');
                             @endphp
@@ -169,7 +171,7 @@
             @csrf
             <button class="btn btn-success" type="submit">
                 <i class="bi bi-link-45deg me-1"></i>
-                Confirmar {{ $preview['links_new'] }} vínculo(s) nuevo(s)
+                Confirmar proceso ({{ $preview['links_new'] }} vínculo(s) nuevo(s))
             </button>
         </form>
     @else
