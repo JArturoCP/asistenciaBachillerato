@@ -121,6 +121,7 @@ class StudentTutorCsvImportController extends Controller
             'tutors_reused' => 0,
             'tutors_restored' => 0,
             'tutors_approved' => 0,
+            'tutor_users_repaired' => 0,
             'links_created' => 0,
             'links_existing' => 0,
         ];
@@ -138,13 +139,60 @@ class StudentTutorCsvImportController extends Controller
                             ->lockForUpdate()
                             ->firstOrFail();
 
-                        if (!$guardian->user
-                            || !in_array($guardian->user->role, ['parent', 'tutor'], true)) {
+                        // Registros históricos pueden tener el tutor sin una cuenta de usuario
+                        // utilizable. El CSV debe reparar esa relación sin duplicar al tutor.
+                        if (!$guardian->user) {
+                            $user = null;
+
+                            if ($profile['email']) {
+                                $user = User::withTrashed()
+                                    ->with(['tutor' => fn ($q) => $q->withTrashed()])
+                                    ->where('email', $profile['email'])
+                                    ->lockForUpdate()
+                                    ->first();
+
+                                if ($user && !in_array($user->role, ['parent', 'tutor'], true)) {
+                                    throw new \RuntimeException("El correo {$profile['email']} pertenece a una cuenta que no es de tutor.");
+                                }
+
+                                if ($user && $user->tutor && (int) $user->tutor->id !== (int) $guardian->id) {
+                                    throw new \RuntimeException("El correo {$profile['email']} ya está asociado a otro tutor.");
+                                }
+                            }
+
+                            if (!$user) {
+                                $user = User::create([
+                                    'nombre' => $profile['nombre'],
+                                    'apellido_paterno' => $profile['apellido_paterno'],
+                                    'apellido_materno' => $profile['apellido_materno'],
+                                    'email' => $profile['email'],
+                                    'phone' => $profile['telefono'],
+                                    'password' => Str::random(48),
+                                    'role' => 'parent',
+                                    'is_approved' => true,
+                                ]);
+                            }
+
+                            if ($user->trashed()) {
+                                $user->restore();
+                            }
+                            if (!$user->is_approved) {
+                                $user->is_approved = true;
+                                $user->save();
+                                $stats['tutors_approved']++;
+                            }
+
+                            $guardian->user_id = $user->id;
+                            $guardian->save();
+                            $guardian->setRelation('user', $user);
+                            $stats['tutor_users_repaired']++;
+                        }
+
+                        if (!in_array($guardian->user->role, ['parent', 'tutor'], true)) {
                             throw new \RuntimeException('Un tutor existente cambió a un estado incompatible durante la confirmación.');
                         }
 
-                        // Si el tutor fue eliminado suavemente, se reactiva el mismo registro.
-                        // Nunca se crea un duplicado y nunca se sobrescriben sus datos con el CSV.
+                        // Si el tutor o su cuenta fueron eliminados suavemente, se reactivan.
                         $restored = false;
                         if ($guardian->user->trashed()) {
                             $guardian->user->restore();
@@ -156,8 +204,6 @@ class StudentTutorCsvImportController extends Controller
                         }
 
                         // Los tutores procesados mediante CSV quedan aprobados por defecto.
-                        // Si la cuenta ya existía pero estaba pendiente, se reutiliza y se aprueba;
-                        // nunca se crea un usuario duplicado por este motivo.
                         if (!$guardian->user->is_approved) {
                             $guardian->user->is_approved = true;
                             $guardian->user->save();
@@ -256,13 +302,13 @@ class StudentTutorCsvImportController extends Controller
             'WRITE',
             'tutores',
             null,
-            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados; {$stats['tutors_restored']} tutores restaurados; {$stats['tutors_approved']} cuentas de tutor aprobadas. No se modificaron alumnos. Operador ".$request->user()->id
+            "CSV vínculo tutores: {$stats['links_created']} vínculos nuevos; {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores creados; {$stats['tutors_reused']} tutores reutilizados; {$stats['tutors_restored']} tutores restaurados; {$stats['tutors_approved']} cuentas de tutor aprobadas; {$stats['tutor_users_repaired']} fichas de tutor reparadas con cuenta de usuario. No se modificaron alumnos. Operador ".$request->user()->id
         );
 
         return redirect()
             ->route('admin.students.index')
             ->with('success',
-                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos, {$stats['tutors_reused']} reutilizados, {$stats['tutors_restored']} restaurados y {$stats['tutors_approved']} aprobados. Ningún alumno fue sobrescrito."
+                "Proceso completado: {$stats['links_created']} vínculos nuevos, {$stats['links_existing']} ya existentes; {$stats['tutors_created']} tutores nuevos, {$stats['tutors_reused']} reutilizados, {$stats['tutors_restored']} restaurados, {$stats['tutors_approved']} aprobados y {$stats['tutor_users_repaired']} con cuenta de usuario reparada. Ningún alumno fue sobrescrito."
             );
     }
 
@@ -282,6 +328,7 @@ class StudentTutorCsvImportController extends Controller
             'tutors_existing' => 0,
             'tutors_to_restore' => 0,
             'tutors_to_approve' => 0,
+            'tutor_users_to_repair' => 0,
             'links_new' => 0,
             'links_existing' => 0,
         ];
@@ -468,6 +515,7 @@ class StudentTutorCsvImportController extends Controller
                     'existing_id' => null,
                     'restore_needed' => false,
                     'approve_needed' => false,
+                    'repair_user_needed' => false,
                 ];
 
                 $tutorKey = $profile['email']
@@ -583,7 +631,11 @@ class StudentTutorCsvImportController extends Controller
                 ])));
 
                 if ($profile['existing_id']) {
-                    if ($profile['restore_needed'] && $profile['approve_needed']) {
+                    if ($profile['repair_user_needed']) {
+                        $row['tutor_estado'] = $profile['restore_needed']
+                            ? 'Tutor histórico — se restaurará y creará cuenta'
+                            : 'Tutor histórico — se creará cuenta';
+                    } elseif ($profile['restore_needed'] && $profile['approve_needed']) {
                         $row['tutor_estado'] = 'Tutor eliminado — se restaurará y aprobará';
                     } elseif ($profile['restore_needed']) {
                         $row['tutor_estado'] = 'Tutor eliminado — se restaurará';
@@ -743,6 +795,10 @@ class StudentTutorCsvImportController extends Controller
                         continue;
                     }
                     $found = $user->tutor;
+                    // El tutor obtenido desde User no trae cargada de vuelta la relación
+                    // user con withTrashed; conservar explícitamente esta instancia evita
+                    // confundir una cuenta eliminada suavemente con una cuenta inexistente.
+                    $found->setRelation('user', $user);
                     if ($this->personKey([
                         'nombre' => $user->nombre,
                         'apellido_paterno' => $user->apellido_paterno,
@@ -817,9 +873,62 @@ class StudentTutorCsvImportController extends Controller
                 }
             }
 
+            // 4) Recuperación de tutores históricos sin cuenta de usuario asociada.
+            // Sólo se toma una coincidencia inequívoca por correo de notificaciones o teléfono.
+            if (!$found) {
+                $emailCandidates = array_values(array_unique(array_filter([
+                    $profile['correo_notificaciones'],
+                    $profile['email'],
+                ])));
+
+                $orphans = $candidateTutors->filter(function ($tutor) use ($profile, $emailCandidates) {
+                    if ($tutor->user) {
+                        return false;
+                    }
+
+                    $emailMatch = false;
+                    $storedEmail = mb_strtolower(trim((string) $tutor->correo_notificaciones), 'UTF-8');
+                    if ($storedEmail !== '' && $emailCandidates) {
+                        $emailMatch = in_array($storedEmail, $emailCandidates, true);
+                    }
+
+                    $phoneMatch = false;
+                    if ($profile['telefono']) {
+                        $storedPhone = $this->phoneValue((string) $tutor->telefono);
+                        $phoneMatch = $storedPhone !== false
+                            && $storedPhone !== null
+                            && $storedPhone === $profile['telefono'];
+                    }
+
+                    return $emailMatch || $phoneMatch;
+                });
+
+                if ($orphans->count() > 1) {
+                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: hay más de un registro histórico sin usuario que coincide con correo/teléfono. Revise la base antes de continuar.");
+                    continue;
+                }
+
+                if ($orphans->count() === 1) {
+                    $found = $orphans->first();
+                    $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: existe una ficha histórica sin cuenta de usuario. Se reutilizará la misma ficha y se creará/asociará una cuenta aprobada al confirmar.");
+                }
+            }
+
             if ($found) {
+                $profile['existing_id'] = $found->id;
+
                 if (!$found->user) {
-                    $this->error($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: el registro no tiene una cuenta de usuario asociada.");
+                    $profile['repair_user_needed'] = true;
+                    $profile['restore_needed'] = $found->trashed();
+                    $profile['approve_needed'] = false;
+                    $result['tutors_existing']++;
+                    $result['tutor_users_to_repair']++;
+
+                    if ($profile['restore_needed']) {
+                        $result['tutors_to_restore']++;
+                        $this->warning($result, "Tutor {$profile['nombre']} {$profile['apellido_paterno']}: la ficha además está eliminada suavemente; se restaurará antes de vincular.");
+                    }
+
                     continue;
                 }
 
